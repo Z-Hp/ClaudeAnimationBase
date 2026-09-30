@@ -1,6 +1,6 @@
 // props.js: the things in Farda videos, drawn flat and hand-painted like the characters. Each is centred on (x, y)
 // with a size s in px (roughly its width), so it can sit in a scene or in a hand hook.
-//   laptop(x, y, s, { screen: 'off' | 'logo' | 'video' | 'search' | 'sim' | 'project', glowK })   phone(x, y, s, { notify })
+//   laptop(x, y, s, { screen: 'off' | 'logo' | 'video' | 'search' | 'sim' | 'project' | 'code', glowK, progress, run })   phone(x, y, s, { notify })
 //   earbuds(x, y, s)   headphones(x, y, s)   watch(x, y, s)   books(x, y, s)   notebook(x, y, s)   bottle(x, y, s)
 //   backpack(x, y, s)   puzzlePiece(x, y, s, { rot, col, lit })   seatCard(x, y, s, seats)   knowledgeMap(x, y, s, filled)
 //   springSim(x, y, s, weights)   examPaper(x, y, s, { mark })   starBadge(x, y, s)   bubble(x, y, s, { reply })
@@ -28,6 +28,15 @@ function laptop(x, y, s, o = {}) {
     glow(x, sy + sh * .64, w * .25, '#7FE6F5', .6);
   }
   if (mode === 'sim') springSim(x, sy + sh * .52, sh * .8, [1, 2]);
+  if (mode === 'code') {   // code writing itself, line by line, and a green tick when it runs (o.run 0..1)
+    const lines = Math.floor(clamp(o.progress ?? 1) * 7);
+    for (let i = 0; i < lines; i++) {
+      const ind = [0, 1, 2, 2, 1, 2, 0][i], w1 = .12 + .2 * hash(i + 3), w2 = .1 + .25 * hash(i + 8);
+      paint(rrPts(sx + swd * (.08 + ind * .06), sy + sh * (.1 + i * .11), swd * w1, sh * .06, sh * .02), { wash: [PAL.nebula, PROP.glow, PROP.code][i % 3], ink: null });
+      paint(rrPts(sx + swd * (.1 + ind * .06 + w1), sy + sh * (.1 + i * .11), swd * w2, sh * .06, sh * .02), { wash: '#6E7AA0', ink: null });
+    }
+    if (o.run > 0) { glow(x + w * .3, sy + sh * .7, w * .15, '#9FE8B0', o.run); paint(ribbon([[x + w * .24, sy + sh * .7], [x + w * .29, sy + sh * .78], [x + w * .38, sy + sh * .6]], w * .025, w * .025), { wash: '#7CC98C', ink: null }); }
+  }
   if (mode === 'project') {   // something Arman made: a little painted rocket on a starry screen
     for (let i = 0; i < 8; i++) paint(starPts(sx + swd * hash(i + 4), sy + sh * hash(i + 9), w * .008, .4, 4), { wash: PAL.cream, ink: null });
     paint(rrPts(x - w * .12, sy + sh * .4, w * .24, sh * .22, sh * .1), { wash: PAL.cream, ink: PAL.ink, sw: sw * .6 });
