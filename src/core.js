@@ -342,6 +342,15 @@ function devUI() {
   const s = document.getElementById('scrub'), lab = document.getElementById('tt'); s.max = window.LOOP ? window.LOOP.len : DUR;
   let busy = false, want = null;
   const go = async () => { if (busy) return; busy = true; while (want != null) { const t = want; want = null; const t0 = performance.now(); await window.renderAt(t); lab.textContent = `${t.toFixed(2)}s  ·  ${Math.round(performance.now() - t0)} ms/frame`; } busy = false; };
-  s.addEventListener('input', () => { want = +s.value; go(); });
+  s.addEventListener('input', () => { want = +s.value; go(); if (song && !song.paused) song.currentTime = want; });
   want = +(new URLSearchParams(location.search).get('t') || 0); s.value = want; go();
+  // ▶ (or space): plays PROJECT.audio and draws whatever frame the song has reached (frames drop when a frame is slow)
+  const btn = document.getElementById('play'), song = PROJECT.audio && !window.LOOP ? new Audio(PROJECT.audio) : null;
+  if (!btn) return;
+  if (!song) { btn.style.display = 'none'; return; }
+  const follow = () => { if (song.paused) return; want = s.value = song.currentTime; go(); requestAnimationFrame(follow); };
+  const toggle = () => { if (song.paused) { song.currentTime = +s.value; song.play(); btn.textContent = '❚❚'; follow(); } else { song.pause(); btn.textContent = '▶'; } };
+  btn.addEventListener('click', toggle);
+  addEventListener('keydown', e => { if (e.code === 'Space') { e.preventDefault(); toggle(); } });
+  song.addEventListener('ended', () => { btn.textContent = '▶'; });
 }

@@ -24,32 +24,39 @@
     if (lt > dur - .3) brushWipe((lt - (dur - .3)) / .6, DAWN);
   }
 
-  // ---------- I2: the growth path at dawn, walking toward the future (146–154) ----------
+  // ---------- I2: the growth path at dawn, walking toward the future (the song's final chorus, 128–153) ----------
+  // Timed to the song in bars from the chorus downbeat: the path lights under them from the first bar («جایی که مسیر
+  // روشن می‌شه»), the three stations light as they reach them on «۰۱», «۰۲», «۰۳» (bars 4, 6, 8), and on the last
+  // «از امروز به فردا بیایید!» they stop on the rise, the sun comes up and Yara flies ahead. Works at any dur ≥ 20.
   function shotPath(t, lt, dur) {
-    const k = seg(lt, 0, dur), G = 860;
-    dawnSky(lerp(.45, .9, k), 'path');
-    camBegin(lerp(1250, 800, ease(k)), 540, 1);
-    const sunY = lerp(780, 600, easeOut(k));
-    boilSeed('path sun'); glow(300, sunY, 360, '#FFD27A', .9); paint(ellPts(300, sunY, 120, 120, 30), { wash: '#FFE3A3', ink: null });
+    const k = seg(lt, 0, dur), G = 860, BAR = 4 * BEAT, NODES = [[1500, '۰۱ · اندیشه تحلیلی'], [1100, '۰۲ · پروژه‌محور'], [700, '۰۳ · آمادگی برای فردا']];
+    const speed = 400 / (2 * BAR), stopAt = 9 * BAR, lead = NODES[0][0] + 80 + speed * (4 * BAR - Math.min(lt, stopAt));   // they reach a station every 2 bars
+    const rise = ease(seg(lt, stopAt, dur - 1));
+    dawnSky(lerp(.45, 1, k), 'path');
+    camBegin(clamp(lead + 330, 820, 1900), 640 - 50 * rise, 1.32 + .08 * rise);
+    const sunY = lerp(820, 560, easeOut(k));
+    boilSeed('path sun'); glow(300, sunY, 360 + 200 * rise, '#FFD27A', .9); paint(ellPts(300, sunY, 120, 120, 30), { wash: '#FFE3A3', ink: null });
     boilSeed('path hills');
     paint(ellPts(900, 1180, 1500, 380, 40, 2), { wash: mixCol('#3A3F8F', '#4E78C9', k), ink: PAL.ink, sw: .9 });
-    paint(rectPts(-600, G, 3200, 400, 2), { wash: mixCol('#2B2E6E', '#2E6C9E', k), ink: null });
-    inkLine([[-200, G], [960, G - 3], [2400, G + 1]], 1, PAL.ink, 'ink', .5);
-    const lead = lerp(1900, 820, seg(lt, 0, 7.4));
-    // the path lights up behind them, and each node as they reach it
-    boilSeed('path line'); inkLine([[1950, G + 22], [Math.max(lead, 200), G + 22]], 2.2, PAL.cyan, 'ink', 0);
-    [[1500, '۰۱ · اندیشه تحلیلی'], [1100, '۰۲ · یادگیری پروژه‌محور'], [700, '۰۳ · آمادگی برای آینده']].forEach(([nx, fa], i) => {
-      if (lead > nx + 80) return;
+    paint(rectPts(-600, G, 3400, 400, 2), { wash: mixCol('#2B2E6E', '#2E6C9E', k), ink: null });
+    inkLine([[-200, G], [960, G - 3], [2800, G + 1]], 1, PAL.ink, 'ink', .5);
+    // the path lights up behind them, and each station as they reach it
+    boilSeed('path line'); inkLine([[2700, G + 22], [Math.max(lead, 200), G + 22]], 2.2, PAL.cyan, 'ink', 0);
+    NODES.forEach(([nx, fa], i) => {
       boilSeed('node ' + i);
       const a = clamp((nx + 80 - lead) / 120);
+      paint(ellPts(nx, G + 22, 12, 12, 12), { wash: mixCol('#7C86B8', PAL.cyan, a), ink: PAL.ink, sw: .6 });   // waiting, then lit
+      if (a <= 0) return;
       glow(nx, G + 22, 90 * a, '#7FE6F5', .9); paint(ellPts(nx, G + 22, 20 * backOut(a), 20 * backOut(a), 14), { wash: PAL.cyan, ink: PAL.ink, sw: .7 });
-      letter(fa, nx, G - 300 - i * 75, 34, PAL.cream, { reveal: a, weight: 700, stroke: PAL.deep });
+      letter(fa, nx, G - 350 - i * 80, 44, PAL.cream, { reveal: a, weight: 700, stroke: PAL.deep });
     });
     [['kian', 600], ['mahsa', 450], ['nima', 300], ['sara', 150], ['arman', 0]].forEach(([who, dx], i) => {
-      const x = lead + dx, w = (1900 - lead) / (4 * 16) + i * .2;
-      person(x, G, 16, { who, ...expr('happy', { seed: i }), view: 'side', flip: true, walk: w, dy: -Math.abs(Math.sin(w * Math.PI)) * .3, aR: .35 * Math.sin(w * TAU), bR: .4, boilKey: 'walker ' + i });
+      const x = lead + dx, stopped = lt > stopAt, w = speed * Math.min(lt, stopAt) / (4 * 16) + i * .2;
+      person(x, G, 16, { who, ...expr('happy', { seed: i }), view: stopped ? 'q' : 'side', flip: true, walk: stopped ? null : w, dy: stopped ? 0 : -Math.abs(Math.sin(w * Math.PI)) * .3,
+        aR: stopped ? .2 + 2.2 * ease(seg(lt, stopAt + .3 + i * .15, stopAt + .8 + i * .15)) + .3 * Math.sin(t * 10) * seg(lt, stopAt + .8, stopAt + 1) : .35 * Math.sin(w * TAU), bR: stopped ? -.2 : .4, boilKey: 'walker ' + i });
     });
-    buddy(lead - 60, G - 300, 26, { mood: 'happy', key: 'yara' });
+    const fly = easeIn(seg(lt, stopAt + 1.5, dur - .4));
+    buddy(lerp(lead - 70, 300, fly), lerp(G - 250, sunY - 180, fly), 26 * (1 - .4 * fly), { mood: 'happy', key: 'yara' });
     camEnd();
     if (lt < .3) brushWipe(.5 + lt / .6, DAWN);
     cover(seg(lt, dur - .6, dur), SUN);

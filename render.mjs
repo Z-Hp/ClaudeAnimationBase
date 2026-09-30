@@ -13,12 +13,12 @@
 //     node render.mjs --encode --out=out/video.mp4                                           out/frames → MP4
 //   Standalone loops (LOOPS in the page): add --loop=<name> to any of the above (times are then loop times), or
 //     node render.mjs --loop=emotions --png --out=out/loop_emotions                          one cycle as PNGs (for GIFs)
-//   Music: --audio=assets/song.mp3 (or PROJECT.audio) is muxed into --clip and --encode. Other flags: --fps=24,
+//   Music: --audio=assets/song.mp3 (or PROJECT.audio; --audio=none for silence) is muxed into --clip and --encode. Other flags: --fps=24,
 //   --chrome=<path to Chrome/Chromium>, --offline (skip Google Fonts; use the local fonts only),
 //   --lite (flat washes instead of watercolour fills: fast previews without a GPU; see LITE in core.js).
 import puppeteer from 'puppeteer-core';
 import { spawn } from 'node:child_process';
-import { mkdirSync, writeFileSync, existsSync, statSync, renameSync, readdirSync } from 'node:fs';
+import { mkdirSync, writeFileSync, existsSync, statSync, renameSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { homedir } from 'node:os';
@@ -44,7 +44,9 @@ const span = s => String(s).split(':').map(Number);
 const fields = s => { const out = []; let d = 0, cur = ''; for (const ch of String(s)) { if (ch === ',' && !d) { out.push(cur); cur = ''; continue; } d += ch === '(' ? 1 : ch === ')' ? -1 : 0; cur += ch; } out.push(cur); return out.map(v => isNaN(+v) ? v : +v); };
 
 if (args.encode) {
-  const out = args.out || 'out/video.mp4', n = readdirSync(FRAMES_DIR).filter(f => f.endsWith('.jpg')).length, audio = args.audio;
+  const out = args.out || 'out/video.mp4', n = readdirSync(FRAMES_DIR).filter(f => f.endsWith('.jpg')).length;
+  // the song from --audio, else PROJECT.audio in src/config.js; --audio=none for a silent video
+  const audio = args.audio === 'none' ? null : args.audio || (readFileSync('src/config.js', 'utf8').match(/audio:\s*'([^']+)'/) || [])[1];
   console.log(`encoding ${n} frames → ${out}${audio ? ' with ' + audio : ''}`);
   await run('ffmpeg', ['-y', '-loglevel', 'error', '-stats', '-framerate', String(fps), '-i', `${FRAMES_DIR}/f%05d.jpg`,
     ...(audio ? ['-i', audio, '-map', '0:v', '-map', '1:a', '-c:a', 'aac', '-b:a', '192k', '-shortest'] : []),

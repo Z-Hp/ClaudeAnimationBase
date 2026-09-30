@@ -14,7 +14,7 @@
     paint(rrPts(bx0, by, bx1 - bx0, 90, 45), { wash: '#FFFFFF', ink: lt > .2 ? PAL.cyan : '#B9BDC8', sw: 1.2 });
     paint(ellPts(bx0 + 55, by + 45, 18, 18, 14), { ink: '#8A93A8', sw: 1 }); inkLine([[bx0 + 68, by + 58], [bx0 + 80, by + 70]], 1.2, '#8A93A8', 'ink', 0);
     const typed = seg(lt, .3, 2);
-    letter('یاد گرفتن واقعی', bx1 - 50, by + 45, 46, PAL.ink, { align: 'right', reveal: typed, ink: false, weight: 600, screen: true });
+    letter('فهمیدنِ واقعی', bx1 - 50, by + 45, 46, PAL.ink, { align: 'right', reveal: typed, ink: false, weight: 600, screen: true });
     if (lt < 2.3 && Math.floor(lt * 3) % 2 === 0) inkLine([[bx1 - 50 - 330 * typed - 8, by + 22], [bx1 - 50 - 330 * typed - 8, by + 68]], 1, PAL.ink, 'inkfine', 0);
     // the results: grey, grey, and one that lights up
     for (let i = 0; i < 4; i++) {

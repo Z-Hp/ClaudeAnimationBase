@@ -421,6 +421,8 @@ The kit doesn't need music, but it's built for it:
 2. Put the audio in `assets/` and set `PROJECT.audio` (or pass `--audio=`). `--clip` and `--encode` mux it in.
 3. Land hits, cuts and takes on beats (`beatN`, `pulse`). Cut on bar lines for big changes, and give each musical phrase its own visual.
 4. **Lyrics are not text.** Don't put words on screen. Act the meaning of a line instead.
+5. **A song that arrives after the shots are written:** don't rewrite the shots. `resync()` in [src/timeline.js](src/timeline.js) replays the written shots on the song's clock. Each row says at which second of the song a shot starts, which of its moments (`pins`) lands on which line, and, if needed, which stretch of it (`from`/`to`) plays. [src/scenes/story_sync.js](src/scenes/story_sync.js) is a full example. Keep each stretch's speed within about 0.7–1.4x, and drive steady swings (a pendulum) with `t`, not `lt`.
+6. **Finding the times:** get the tempo and first downbeat from the file itself (librosa, for example), then the section boundaries (silences, the band coming in, the chorus repeating) and when each line is sung. In `studio.html`, ▶ (or Space) plays the video with the song so you can check the sync by eye and ear.
 
 ## Common failures
 

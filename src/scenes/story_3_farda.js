@@ -20,7 +20,8 @@
     camBegin(965, 610, 1.38 + .006 * lt);
     fardaRoom(t);
     const talkM = talk(lt, 1.6, 4.6, 'smile');
-    person(640, seatAt('mentor', TY, u), u, { who: 'mentor', ...acts(lt, [[0, 'neutral'], [1.5, 'happy', { lookX: .6 }], [6, 'neutral', { lookX: .7 }]]), mouth: lt < 6 ? talkM : 'smile',
+    person(610, TY + 15, u,   // the teacher stands, so her staff badge shows above the table
+      { who: 'mentor', ...acts(lt, [[0, 'neutral'], [1.5, 'happy', { lookX: .6 }], [6, 'neutral', { lookX: .7 }]]), mouth: lt < 6 ? talkM : 'smile',
       view: 'q', aR: lt > 2.4 && lt < 5.6 ? 1.15 + .05 * Math.sin(lt * 4) : .3, bR: lt > 2.4 && lt < 5.6 ? .15 : 1.6, aL: .3, bL: 1.6, seed: 11 });
     const pick = ease(seg(lt, 8.1, 8.9)), reach = ease(seg(lt, 7.6, 8.2)) * (1 - ease(seg(lt, 8.9, 9.6)));
     student(1290, seatAt('arman', TY, u), u, { ...acts(lt, [[0, 'worried', { lookX: .5 }], [3.2, 'curious', { lookX: .4, lookY: .3 }], [9.6, 'happy', { lookX: .3 }]]),
@@ -65,7 +66,7 @@
     camBegin(kf(lt, [[0, 960], [6, 960], [7, 1020], [15, 1020], [16.5, 980]]), kf(lt, [[0, 620], [7, 600], [16.5, 590]]), kf(lt, [[0, 1.22], [6, 1.24], [7, 1.4], [15, 1.4], [16.5, 1.3]]));
     fardaRoom(t, { winX: 1400, posterX: 150, plantX: 1300 });
     // the lesson: a pendulum in a hologram over the table
-    const PX = 960, PY = 330, amp = .35 + .25 * ease(seg(lt, 1.5, 3)) + .2 * seg(lt, 11, 12.5), ang = amp * Math.sin(lt * 3.2);
+    const PX = 960, PY = 330, amp = .35 + .25 * ease(seg(lt, 1.5, 3)) + .2 * seg(lt, 11, 12.5), ang = amp * Math.sin(t * 3.2);   // swings on t: steady whatever resync does to lt
     holoPanel(PX, 470, 420, 400);
     boilSeed('pendulum');
     const bob = [PX + Math.sin(ang) * 260, PY + Math.cos(ang) * 260];
@@ -89,7 +90,8 @@
     const sReach = ease(seg(lt, 1.3, 1.8)) * (1 - ease(seg(lt, 3, 3.5)));
     person(450, seatAt('sara', TY, u), u, { who: 'sara', ...acts(lt, [[0, 'curious', { lookX: .8 }], [9.4, 'happy', { lookX: .9 }], [19.2, all, { lookX: .8 }]]), aR: lerp(.3, 1.6, sReach), bR: lerp(1.8, .1, sReach), aL: .3, bL: 1.8, seed: 22 });
     const mTurn = lt > 6.3;
-    person(690, seatAt('mentor', TY, u), u, { who: 'mentor', ...acts(lt, [[0, 'happy', { lookX: .5 }], [6.3, 'curious', { lookX: 1, mouth: 'smile' }], [9.5, 'happy', { lookX: .9 }], [10.6, 'neutral', { lookX: .6 }], [19.3, 'proud']]),
+    person(680, TY + 15, u,   // standing, beside the lesson
+      { who: 'mentor', ...acts(lt, [[0, 'happy', { lookX: .5 }], [6.3, 'curious', { lookX: 1, mouth: 'smile' }], [9.5, 'happy', { lookX: .9 }], [10.6, 'neutral', { lookX: .6 }], [19.3, 'proud']]),
       mouth: lt > 10.6 && lt < 12.6 ? talk(lt, 10.6, 12.6) : undefined, view: mTurn ? 'q' : 'front', aR: lt > 10.6 && lt < 12.8 ? 1.2 : .3, bR: lt > 10.6 && lt < 12.8 ? .2 : 1.8, aL: .3, bL: 1.8, tilt: mTurn ? .05 : 0, seed: 23 });
     const up = ease(seg(lt, 6, 6.5)) * (1 - ease(seg(lt, 7.2, 7.8)));
     const aMood = acts(lt, [[0, 'curious', { lookX: -.5 }], [6.6, 'amazed', { lookX: -.8 }], [7.1, 'happy', { lookX: -.8 }], [9.2, 'embarrassed'], [11.2, 'thinking', { lookX: -.6 }], [13.2, 'idea', { lookX: -.5 }], [14.2, 'happy', { lookX: -.6 }], [19.2, 'amazed', { lookX: -.5 }]]);
@@ -225,6 +227,43 @@
     if (lt < .3) brushWipe(.5 + lt / .6, BRAND);
     cover(seg(lt, 11.5, 12), LIGHT);
   }
+
+  // ---------- F2 (song only): «تکه‌تکه، پازلِ ذهنت آروم سرِ جاش چیده می‌شه»: inside his mind, piece by piece ----------
+  // Four of the six pieces land, one a bar, each a subject Farda teaches; two places stay open for the exam to fill.
+  const ICONS = [
+    (x, y, s) => { inkLine([[x - s * .3, y], [x + s * .3, y]], s / 30, PAL.deep, 'ink', 0); inkLine([[x, y - s * .3], [x, y + s * .3]], s / 30, PAL.deep, 'ink', 0);   // maths: + and √
+                   inkLine([[x - s * .42, y + s * .12], [x - s * .34, y + s * .22], [x - s * .22, y - s * .34], [x + s * .1, y - s * .34]], s / 50, PAL.brandDk, 'inkfine', 0); },
+    (x, y, s) => { for (let i = 0; i < 3; i++) { push(); translate(x, y); rotate(i * Math.PI / 3); paint(ellPts(0, 0, s * .36, s * .13, 24), { ink: PAL.deep, sw: s / 90 }); pop(); }   // physics: an atom
+                   paint(ellPts(x, y, s * .06, s * .06, 10), { wash: PAL.nebula, ink: null }); },
+    (x, y, s) => buddy(x, y + s * .05, s * .16, { mood: 'happy', key: 'mind yara' }),   // AI: Yara
+    (x, y, s) => { for (const d of [-1, 1]) inkLine([[x + d * s * .18, y - s * .2], [x + d * s * .36, y], [x + d * s * .18, y + s * .2]], s / 34, PAL.deep, 'ink', 0);   // code: </>
+                   inkLine([[x + s * .07, y - s * .26], [x - s * .07, y + s * .26]], s / 34, PAL.brand, 'ink', 0); },
+  ];
+  function shotMindPieces(t, lt, dur) {
+    const s = 190, CX = 960, CY = 560, BAR = 4 * BEAT;
+    camBegin(960, 540, 1 + .012 * lt);
+    boilSeed('mind space');
+    paint(rectPts(-300, -300, W + 600, H + 600), { wash: PAL.deep, ink: null });
+    glow(CX, CY, 700, PAL.cosmos, .6); glow(CX, CY, 380, '#7FE6F5', .25 + .2 * seg(lt, 0, dur));
+    for (let i = 0; i < 40; i++) { boilSeed('mind star ' + i); paint(starPts(hash(i) * W, hash(i + 70) * H, 2 + 3 * hash(i + 3), .35, 4), { wash: PAL.cream, washOp: 90 + 120 * hash(i + 9), ink: null }); }
+    const KN = [[0, 1, -1, 0], [0, 0, 1, -1], [0, -1, 1, 1], [1, -1, 0, 0], [-1, 0, 0, 1], [1, 1, 0, -1]], ORDER = [0, 4, 2, 3];
+    for (let i = 0; i < 6; i++) {
+      const gx = CX + ((i % 3) - 1) * s * .98, gy = CY - s * .5 + Math.floor(i / 3) * s * .98, n = ORDER.indexOf(i);
+      boilSeed('mind slot ' + i);
+      paint(rrPts(gx - s * .42, gy - s * .42, s * .84, s * .84, 16), { ink: mixCol('#7FE6F5', PAL.deep, .45), sw: 1 });   // every place, waiting
+      if (n < 0) { letter('؟', gx, gy, 70, '#7FE6F5', { alpha: .5, ink: false, weight: 700 }); continue; }
+      const k = seg(lt, .15 + n * BAR, .15 + n * BAR + 1.1); if (k <= 0) continue;
+      const from = [[-300, 200], [W + 300, 900], [W + 200, 100], [-200, 1000]][n], e = easeOut(k);
+      const p = [lerp(from[0], gx, e), lerp(from[1], gy, e) - Math.sin(e * Math.PI) * 120];
+      if (k >= 1) sparkleAt(gx, gy - s * .5, 70, seg(lt, .15 + n * BAR + 1.1, .15 + n * BAR + 1.6));
+      puzzlePiece(p[0], p[1], s, { rot: (1 - e) * (2 + n), lit: k >= 1, knobs: KN[i] });
+      push(); translate(p[0], p[1]); rotate((1 - e) * (2 + n)); ICONS[n](0, 0, s); pop();
+    }
+    camEnd();
+    if (lt < .6) iris(960, 540, lerp(0, 1500, easeIn(lt / .6)), SETS.lamp.wallDk);
+    if (lt > dur - .3) brushWipe((lt - (dur - .3)) / .6, BRAND);
+  }
+  SHOT_FNS.mindPieces = shotMindPieces;
 
   shots([[70, shotAssess], [82, shotClass], [104, shotAI], [116, shotBuild], [119.3, shotCode], [122.6, shotShow], [126, shotExam]]);
 })();
