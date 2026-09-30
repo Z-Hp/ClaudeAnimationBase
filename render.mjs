@@ -15,7 +15,8 @@
 //     node render.mjs --loop=emotions --png --out=out/loop_emotions                          one cycle as PNGs (for GIFs)
 //   Music: --audio=assets/song.mp3 (or PROJECT.audio; --audio=none for silence) is muxed into --clip and --encode. Other flags: --fps=24,
 //   --chrome=<path to Chrome/Chromium>, --offline (skip Google Fonts; use the local fonts only),
-//   --lite (flat washes instead of watercolour fills: fast previews without a GPU; see LITE in core.js).
+//   --lite (flat washes instead of watercolour fills: fast previews without a GPU; see LITE in core.js),
+//   --verbose (show the page's WebGL and network warnings too).
 import puppeteer from 'puppeteer-core';
 import { spawn } from 'node:child_process';
 import { mkdirSync, writeFileSync, existsSync, statSync, renameSync, readdirSync, readFileSync } from 'node:fs';
@@ -66,13 +67,19 @@ const gpu = args['soft-gl'] ? ['--use-angle=swiftshader', '--enable-unsafe-swift
   : process.platform === 'win32' ? ['--use-angle=d3d11'] : process.platform === 'darwin' ? ['--use-angle=metal'] : ['--use-gl=angle'];
 // Ubuntu 23.10+ blocks Chrome's user-namespace sandbox; headless rendering of local files doesn't need it.
 const sandbox = process.platform === 'linux' ? ['--no-sandbox'] : [];
-const browser = await puppeteer.launch({
+const launch = () => puppeteer.launch({
   executablePath: CHROME, headless: true, protocolTimeout: 0,
   args: [...sandbox, '--allow-file-access-from-files', '--ignore-gpu-blocklist', ...gpu, '--enable-gpu-rasterization', '--window-size=1920,1080', '--disable-renderer-backgrounding', '--disable-background-timer-throttling']
 });
+let browser = await launch(), relaunching = null;
+// Chrome (or its GPU process) can die mid-render on a long job; --frames reopens it and carries on (see below).
+const ensureBrowser = () => browser.connected ? browser : (relaunching ??= launch().then(b => { browser = b; relaunching = null; return b; }));
+// Harmless page noise, hidden unless --verbose: p5.brush's WebGL uniform warnings, GPU stalls, and fonts that can't be
+// fetched (no internet or a filtered network; the local fonts are used instead).
+const NOISE = /WebGL: INVALID_OPERATION|GPU stall|net::ERR_/;
 async function openPage(tag = '') {
-  const page = await browser.newPage();
-  page.on('console', m => { if (['error', 'warn'].includes(m.type())) console.log(`[page${tag}]`, m.text()); });
+  const page = await (await ensureBrowser()).newPage();
+  page.on('console', m => { if (['error', 'warn'].includes(m.type()) && (args.verbose || !NOISE.test(m.text()))) console.log(`[page${tag}]`, m.text()); });
   page.on('pageerror', e => console.log(`[page error${tag}]`, e.message));
   // --offline: skip Google Fonts (a machine without internet, or behind a proxy that stalls them); the page falls back
   // to the local fonts (Vazirmatn comes from node_modules) instead of waiting on the network.
@@ -140,10 +147,20 @@ if (args.sheet || args.strip) {
   console.log(`${todo.length} frames to render (${last - first + 1 - todo.length} already done), ${workers} workers`);
   let next = 0, done = 0; const start = Date.now();
   await Promise.all(Array.from({ length: workers }, async (_, w) => {
-    const page = await openPage('#' + w);
+    let page = await openPage('#' + w);
     while (next < todo.length) {
       const i = todo[next++], f = `${FRAMES_DIR}/f${String(i).padStart(5, '0')}.jpg`;
-      const buf = await frameOf(page, i / fps, 'image/jpeg', .94);
+      let buf;
+      // a page (or the whole browser) that crashes is reopened and the frame tried again, up to 3 times
+      for (let attempt = 1; !buf; attempt++) {
+        try { buf = await frameOf(page, i / fps, 'image/jpeg', .94); }
+        catch (e) {
+          if (attempt >= 3) throw e;
+          console.log(`frame ${i} failed (${e.message.split('\n')[0]}); reopening the page and trying again`);
+          await page.close().catch(() => {});
+          page = await openPage('#' + w);
+        }
+      }
       writeFileSync(f + '.tmp', buf); renameSync(f + '.tmp', f);
       if (++done % 24 === 0 || done === todo.length) {
         const el = (Date.now() - start) / 1000;
