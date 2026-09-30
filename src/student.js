@@ -7,23 +7,53 @@
 //   (x, y) = the ground point between the feet; u = size unit (the student is about 15.5u tall, hair included).
 //   aL / aR: arm angles from hanging straight down (+ = out and up; PI/2 = level, PI = straight up);
 //   bL / bR: elbow bends (+ bends the forearm in, toward the chest).
-//   eyes: open, wide, sparkle, focus, happy, closed, squeeze, wink. brows: neutral, up, down, worried, raise.
-//   mouth: smile, grin, o, O, flat, wobble, laugh, smirk. Expressions bundle them: expr('curious') etc.
+//   eyes: open, wide, sparkle, focus, half, sleepy, dull, tired, narrow, angry, scared, teary, cry, happy, closed,
+//         squeeze, yawn, wink. brows: neutral, up, down, flat, worried, sad, angry, raise, skeptic.
+//   mouth: smile, grin, o, O, flat, wobble, laugh, smirk, frown, yawn, teeth, wail, pout, side, meh, sigh.
+//   face extras: blush 0..1+, gloom 0..1 (forehead lines), hud: 'notify' (a notification on the glasses), tilt (head, rad).
+//   Expressions bundle them: expr('curious') etc. (STU_EXPR; the sheet of all of them is studio.html?loop=studentFaces).
 const STU = {
   skin: '#F1C7A2', skinDk: '#D39472', hair: '#43291F', hairLt: '#6E4636',
   hoodie: '#3D63D6', hoodieDk: '#2A469F', pants: '#2B2F45', pantsDk: '#1E2133',
   shoe: '#F2EEE6', pack: '#34364A', packDk: '#25273A', glow: '#3CCFE6', iris: '#5A3A2A', mouth: '#5A2430'
 };
 const STU_EXPR = {
-  neutral: { eyes: 'open', brows: 'neutral', mouth: 'smile' },
-  happy: { eyes: 'open', brows: 'up', mouth: 'grin', blush: .7 },
-  curious: { eyes: 'open', brows: 'raise', mouth: 'o', lookX: .5, lookY: -.45 },
-  amazed: { eyes: 'sparkle', brows: 'up', mouth: 'O', blush: .5 },
-  focused: { eyes: 'focus', brows: 'down', mouth: 'flat', lookY: .3 },
-  idea: { eyes: 'sparkle', brows: 'up', mouth: 'grin', emote: 'bulb' },
-  confused: { eyes: 'open', brows: 'worried', mouth: 'wobble', lookX: -.4, emote: '?' },
-  laugh: { eyes: 'squeeze', brows: 'up', mouth: 'laugh', blush: .9 },
-  wink: { eyes: 'wink', brows: 'raise', mouth: 'smirk', blush: .4 },
+  neutral:      { fa: 'عادی', eyes: 'open', brows: 'neutral', mouth: 'smile' },
+  // joy
+  happy:        { fa: 'شاد', eyes: 'open', brows: 'up', mouth: 'grin', blush: .7 },
+  excited:      { fa: 'هیجان‌زده', eyes: 'wide', brows: 'up', mouth: 'laugh', blush: .6, emote: 'spark' },
+  laugh:        { fa: 'خنده', eyes: 'squeeze', brows: 'up', mouth: 'laugh', blush: .9 },
+  proud:        { fa: 'افتخار', eyes: 'closed', brows: 'up', mouth: 'smile', blush: .5, tilt: -.1 },
+  amazed:       { fa: 'شگفت‌زده', eyes: 'sparkle', brows: 'up', mouth: 'O', blush: .5 },
+  relieved:     { fa: 'آسوده', eyes: 'closed', brows: 'worried', mouth: 'smile', emote: 'sweat', tilt: .06 },
+  // learning
+  curious:      { fa: 'کنجکاو', eyes: 'open', brows: 'raise', mouth: 'o', lookX: .5, lookY: -.45 },
+  thinking:     { fa: 'در فکر', eyes: 'open', brows: 'raise', mouth: 'side', lookX: -.6, lookY: -.7, emote: 'dots', tilt: .06 },
+  focused:      { fa: 'متمرکز', eyes: 'focus', brows: 'down', mouth: 'flat', lookY: .3 },
+  idea:         { fa: 'ایده!', eyes: 'sparkle', brows: 'up', mouth: 'grin', emote: 'bulb' },
+  determined:   { fa: 'مصمم', eyes: 'angry', brows: 'down', mouth: 'smirk', lookX: .3 },
+  confident:    { fa: 'مطمئن', eyes: 'half', brows: 'raise', mouth: 'smirk', blush: .3, tilt: .05 },
+  // low energy
+  sleepy:       { fa: 'خواب‌آلود', eyes: 'sleepy', brows: 'flat', mouth: 'o', emote: 'zzz', tilt: .14 },
+  yawn:         { fa: 'خمیازه', eyes: 'yawn', brows: 'up', mouth: 'yawn', tilt: -.06 },
+  bored:        { fa: 'بی‌حوصله', eyes: 'half', brows: 'flat', mouth: 'meh', lookX: -.3, lookY: .35, tilt: .12 },
+  distracted:   { fa: 'عدم تمرکز', eyes: 'open', brows: 'neutral', mouth: 'o', lookX: .95, lookY: -.35, hud: 'notify' },
+  uninterested: { fa: 'بی‌علاقه', eyes: 'dull', brows: 'flat', mouth: 'side', lookX: -.9, tilt: -.07 },
+  tired:        { fa: 'خسته', eyes: 'tired', brows: 'worried', mouth: 'sigh', tilt: .08 },
+  // trouble
+  confused:     { fa: 'گیج', eyes: 'open', brows: 'skeptic', mouth: 'wobble', lookX: -.4, emote: '?' },
+  worried:      { fa: 'نگران', eyes: 'open', brows: 'sad', mouth: 'wobble', lookX: .4, lookY: .2, emote: 'sweat' },
+  stressed:     { fa: 'استرس امتحان', eyes: 'scared', brows: 'sad', mouth: 'teeth', gloom: .8, emote: 'sweat' },
+  frustrated:   { fa: 'کلافه', eyes: 'angry', brows: 'angry', mouth: 'teeth', emote: 'scribble' },
+  sad:          { fa: 'غمگین', eyes: 'teary', brows: 'sad', mouth: 'frown', lookY: .4 },
+  disappointed: { fa: 'ناامید', eyes: 'half', brows: 'sad', mouth: 'frown', lookY: .6, gloom: .6, tilt: .1 },
+  // big feelings
+  angry:        { fa: 'عصبانی', eyes: 'angry', brows: 'angry', mouth: 'teeth', blush: .9, emote: 'anger' },
+  embarrassed:  { fa: 'خجالت‌زده', eyes: 'open', brows: 'sad', mouth: 'wobble', lookX: -.7, lookY: .5, blush: 1.3, emote: 'sweat', tilt: -.08 },
+  scared:       { fa: 'ترسیده', eyes: 'scared', brows: 'sad', mouth: 'wail', emote: '!!' },
+  cry:          { fa: 'گریه', eyes: 'cry', brows: 'sad', mouth: 'wail' },
+  skeptical:    { fa: 'مشکوک', eyes: 'narrow', brows: 'skeptic', mouth: 'side', lookX: .6 },
+  wink:         { fa: 'چشمک', eyes: 'wink', brows: 'raise', mouth: 'smirk', blush: .4 },
 };
 const expr = (name, over = {}) => ({ ...STU_EXPR[name], ...over });
 
@@ -50,7 +80,7 @@ function student(x, y, u, o = {}) {
 
   rs('legs'); stuLegs(u, sw, view, o.walk);
   rs('torso'); stuTorso(u, sw, view);
-  rs('head'); push(); translate(0, -11.7 * u); stuHead(u, o, sw, view); pop();
+  rs('head'); push(); translate(0, -9.2 * u); rotate(o.tilt || 0); translate(0, -2.5 * u); stuHead(u, o, sw, view); pop();
   if (view === 'front') { arm(-1); arm(1); } else if (view === 'q') arm(1); else if (view === 'side') arm(1); else { arm(-1); arm(1); }
   rs('draw'); if (o.draw) o.draw(u, sw);
   pop();
@@ -171,17 +201,28 @@ function stuHead(u, o, sw, view) {
   }
   if (F) {
     push(); translate(F.cx * u, 0); scale(F.fw, 1);
-    const bl = clamp(o.blush ?? .35);
+    const bl = clamp(o.blush ?? .35);   // (over 1 adds hatching)
     for (const s of F.sides) {
       const bx = s * (view === 'side' ? 1.3 : 2.05);
       paint(ellPts(bx * u, 1.3 * u, .6 * u, .32 * u, 12), { fill: PAL.rose, fillOp: 60 + 110 * bl, bleed: .2, ink: null });
+      if ((o.blush || 0) > 1) for (let k = 0; k < 3; k++) inkLine(P([[bx - .35 + k * .3, 1.45], [bx - .2 + k * .3, 1.1]]), sw * .4, mixCol(PAL.rose, PAL.ink, .3), 'inkfine', 0);
       for (let k = 0; k < 3; k++) paint(ellPts((bx + (k - 1) * .3) * u, (1.1 + (k % 2) * .18) * u, .06 * u, .06 * u, 6), { wash: STU.skinDk, ink: null });   // freckles
     }
     for (const s of F.sides) { push(); translate(s * 1.2 * u, .35 * u); stuEye(o.eyes === 'wink' ? (s < 0 ? 'happy' : 'open') : o.eyes || 'open', s, u, o, sw); pop(); }
     for (const s of F.sides) stuBrow(s, o.brows || 'neutral', u, sw);
     if (view !== 'side') inkLine(P([[.05, .85], [.28, 1.2], [.05, 1.28]]), sw * .5, STU.skinDk, 'ink', .5);
     stuMouth(o.mouth || 'smile', u, sw);
+    if (o.gloom > .02) for (let i = 0; i < 5; i++) {   // gloom: hanging lines on the forehead
+      const gx = -1.6 + i * .8; if (F.sides.length < 2 && gx < -.4) continue;
+      inkLine(P([[gx, -1.6], [gx + .03, -1.6 + .5 * o.gloom * (.7 + .3 * hash(i))]]), sw * .45, mixCol(PAL.indigo, PAL.ink, .3), 'inkfine', 0);
+    }
     if (o.glasses !== false) stuGlasses(u, sw, F.sides, view === 'side' ? (-.35 - F.cx) / F.fw : null);
+    if (o.hud === 'notify' && F.sides.includes(1)) {   // a notification lighting up on the right lens: the distraction
+      const pulse2 = .7 + .3 * Math.sin(T * 8);
+      glow(1.95 * u, -.05 * u, 1.1 * u * pulse2, '#FF8FB0', .6);
+      paint(ellPts(1.95 * u, -.05 * u, .22 * u, .22 * u, 10), { wash: '#FF6F96', ink: PAL.ink, sw: sw * .35 });
+      inkLine(P([[1.55, .45], [2.1, .45]]), sw * .4, '#FF6F96', 'inkfine', 0);
+    }
     pop();
   }
   stuHair(u, sw, view);
@@ -202,9 +243,53 @@ function stuEye(e, s, u, o, sw) {
     line([[-.64 * k, -.28 * k], [-.3 * k, -.7 * k], [.28 * k, -.74 * k], [.66 * k, -.36 * k]], 1.4, .5);   // upper lid
     line([[s * .52 * k, -.5 * k], [s * .85 * k, -.68 * k]], .9, 0);   // a lash flick at the outer corner
   };
+  // eyelids: skin drawn down over the eye to y0 (sl tilts it: + drops the inner end, toward the nose), or up from below
+  const lid = (y0, sl = 0, w = 1.5) => {
+    const yi = y0 + sl, yo = y0 - sl * .3, [yl, yr] = s > 0 ? [yi, yo] : [yo, yi];
+    paint(P([[-.85, -1.1], [.85, -1.1], [.85, yr], [-.85, yl]]), { wash: STU.skin, ink: null });
+    line([[-.66, yl + .02], [0, (yl + yr) / 2 - .06], [.68, yr + .02]], w, .4);
+  };
+  const low = y0 => { paint(P([[-.85, y0], [.85, y0], [.85, 1.05], [-.85, 1.05]]), { wash: STU.skin, ink: null }); line([[-.55, y0 + .03], [.55, y0 + .03]], .6, .3); };
   switch (e) {
     case 'open': open(); break;
     case 'wide': open(1.14); break;
+    case 'half': open(); lid(.02); break;
+    case 'sleepy': open(); lid(.3, 0, 1.6); low(.6); break;
+    case 'narrow': open(); lid(-.12); low(.34); break;
+    case 'angry': open(); lid(-.28, .38); break;
+    case 'tired':
+      open(); lid(.05);
+      for (const d of [0, .2]) inkLine(P([[-.5, .82 + d], [0, .95 + d], [.5, .82 + d]]), sw * .4, mixCol(STU.skinDk, PAL.violet, .35), 'inkfine', .5);   // dark circles
+      break;
+    case 'dull':   // flat, unlit: small pupils, no shine, heavy lids
+      paint(ellPts(0, 0, .56 * u, .72 * u, 16), { wash: '#FFFDF8', ink: PAL.ink, sw: sw * .5 });
+      paint(ellPts(lx, ly + .1 * u, .3 * u, .38 * u, 12), { wash: STU.iris, ink: null });
+      paint(ellPts(lx, ly + .12 * u, .15 * u, .18 * u, 8), { wash: PAL.ink, ink: null });
+      lid(-.02, 0, 1.3); break;
+    case 'scared': {   // wide whites, tiny trembling pupils
+      const j = Math.sin(T * 40) * .03 * u;
+      paint(ellPts(0, 0, .64 * u, .82 * u, 16), { wash: '#FFFDF8', ink: PAL.ink, sw: sw * .6 });
+      paint(ellPts(lx * .5 + j, ly * .5, .2 * u, .24 * u, 10), { wash: STU.iris, ink: null });
+      paint(ellPts(lx * .5 + j, ly * .5, .1 * u, .12 * u, 8), { wash: PAL.ink, ink: null });
+      break;
+    }
+    case 'teary': {
+      open();
+      const w = Math.sin(T * 7 + s) * .04;
+      paint(P([[-.52, .38 + w], [.52, .38 - w], [.36, .68], [0, .76], [-.36, .68]]), { wash: PAL.sky, washOp: 220, ink: PAL.ink, sw: sw * .35, curv: .5 });
+      paint(ellPts(-.2 * u, .5 * u, .1 * u, .06 * u, 6), { wash: '#FFFFFF', ink: null });
+      break;
+    }
+    case 'cry': {   // shut tight, tears running down the cheeks
+      line([[-.6, .05], [0, -.25], [.6, .05]], 1.4, .5);
+      const R = []; for (let k = 0; k <= 5; k++) R.push([(s * .35 + Math.sin(T * 8 + k * 1.3 + s) * .1 * k / 5) * u, (.25 + k * .42) * u]);
+      paint(ribbon(R, .28 * u, .5 * u), { wash: PAL.sky, washOp: 230, ink: PAL.ink, sw: sw * .35 });
+      break;
+    }
+    case 'yawn':   // squeezed, with a little tear at the outer corner
+      line([[-.6, -.05], [0, .15], [.6, -.05]], 1.4, .5);
+      paint(ellPts(s * .75 * u, .3 * u, .13 * u, .18 * u, 8), { wash: PAL.sky, ink: PAL.ink, sw: sw * .3 });
+      break;
     case 'sparkle': open(1.08, true); break;
     case 'focus':
       open();
@@ -218,7 +303,8 @@ function stuEye(e, s, u, o, sw) {
 }
 function stuBrow(s, kind, u, sw) {
   // inner end near the nose, outer end at the temple; raised = more negative y
-  const k = { neutral: [0, 0], up: [-.3, -.25], down: [.32, -.05], worried: [-.35, .15], raise: s > 0 ? [-.45, -.45] : [0, 0] }[kind] || [0, 0];
+  const k = { neutral: [0, 0], up: [-.3, -.25], down: [.32, -.05], flat: [.18, .18], worried: [-.35, .15], sad: [-.45, .28], angry: [.5, -.15],
+    raise: s > 0 ? [-.45, -.45] : [0, 0], skeptic: s > 0 ? [-.45, -.45] : [.3, .25] }[kind] || [0, 0];
   const inner = [s * .55, -.95 + k[0]], mid = [s * 1.2, -1.15 + (k[0] + k[1]) / 2], outer = [s * 1.85, -.95 + k[1]];
   paint(ribbon([inner, mid, outer].map(([a, b]) => [a * u, b * u]), .34 * u, .16 * u), { wash: STU.hair, ink: null });
 }
@@ -240,6 +326,27 @@ function stuMouth(m, u, sw) {
       paint(ellPts(0, 2.45 * u, .5 * u, .2 * u, 12), { wash: PAL.rose, ink: null });
       paint(P([[-.85, 1.65], [.85, 1.65], [.7, 1.85], [-.7, 1.85]]), { wash: PAL.cream, ink: null }); break;
     case 'smirk': line([[-.55, 2], [.2, 1.98], [.7, 1.7]], .9, .5); break;
+    case 'frown': line([[-.6, 2.15], [0, 1.85], [.6, 2.15]]); break;
+    case 'meh': line([[-.5, 1.95], [.2, 1.98], [.6, 2.14]], .9, .4); break;
+    case 'side': line([[.05, 2.02], [.75, 1.94]], .9, 0); break;
+    case 'pout': line([[-.3, 1.95], [0, 1.8], [.3, 1.95]], 1, .6); line([[-.18, 2.12], [0, 2.18], [.18, 2.12]], .6, .6); break;
+    case 'sigh':
+      paint(ellPts(.35 * u, 2.02 * u, .2 * u, .15 * u, 10), { wash: STU.mouth, ink: PAL.ink, sw: sw * .45 });
+      for (let k = 0; k < 2; k++) { const a = frac(T * .8 + k * .5); paint(ellPts((.9 + a * .9) * u, (2 - a * .3) * u, (.1 + .15 * a) * u, (.08 + .12 * a) * u, 8), { wash: PAL.cream, washOp: 230 * (1 - a), ink: null }); }
+      break;
+    case 'yawn':
+      paint(ellPts(0, 2.3 * u, .55 * u, .78 * u, 16), { wash: STU.mouth, ink: PAL.ink, sw: sw * .6 });
+      paint(ellPts(0, 2.75 * u, .35 * u, .2 * u, 10), { wash: PAL.rose, ink: null }); break;
+    case 'teeth':
+      paint(rrPts(-.85 * u, 1.72 * u, 1.7 * u, .55 * u, .15 * u), { wash: PAL.cream, ink: PAL.ink, sw: sw * .6 });
+      line([[-.8, 2], [.8, 2]], .4, 0);
+      for (const tx of [-.42, 0, .42]) line([[tx, 1.76], [tx, 2.23]], .35, 0);
+      break;
+    case 'wail': {
+      const w = Math.sin(T * 26) * .05;
+      paint(P([[-.9, 1.9 + w], [-.35, 1.65], [.35, 1.65 - w], [.9, 1.9], [.7, 2.6], [-.7, 2.6]]), { wash: STU.mouth, ink: PAL.ink, sw: sw * .6, curv: .35 });
+      paint(ellPts(0, 2.45 * u, .45 * u, .15 * u, 10), { wash: PAL.rose, ink: null }); break;
+    }
   }
 }
 // Smart glasses: round frames with a cyan brow line, a tiny HUD on the right lens and a light at the temple.
@@ -251,7 +358,7 @@ function stuGlasses(u, sw, sides, earX) {
     paint(rrPts((cx - .95) * u, -.42 * u, 1.9 * u, 1.55 * u, .7 * u), { ink: PAL.ink, sw: sw * .75 });
     inkLine(P([[cx + s * .55, -.4], [cx + s * .9, -.1]]), sw * .7, STU.glow, 'ink', .4);
     if (s > 0) {
-      glow((cx + .45) * u, .05 * u, .9 * u, '#7FE6F5', .35);
+      glow((cx + .45) * u, .05 * u, .8 * u, '#7FE6F5', .18);
       inkLine(P([[cx + .25, -.15], [cx + .6, -.2], [cx + .75, .1]]), sw * .45, STU.glow, 'inkfine', .5);
       paint(ellPts((cx + .45) * u, .3 * u, .07 * u, .07 * u, 6), { wash: STU.glow, ink: null });
     }
@@ -376,4 +483,18 @@ function holo(x, y, w, h, k = 1) {
     });
   };
   LOOPS.student.len = 4;
+
+  // every expression, as heads: studio.html?loop=studentFaces
+  LOOPS.studentFaces = t => {
+    label('حالت‌های چهره', 960, 34, 32);
+    const names = Object.keys(STU_EXPR).filter(n => n !== 'neutral'), u = 18;
+    names.forEach((n, i) => {
+      const c = i % 6, r = Math.floor(i / 6), x = 1765 - c * 305, y = 150 + r * 203, E = expr(n, { seed: i });
+      boilSeed('face ' + n);
+      push(); translate(x, y + 2.5 * u); rotate(E.tilt || 0); translate(0, -2.5 * u); stuHead(u, E, clamp(u / 16, .45, 2.2), 'front'); pop();
+      if (E.emote) emote(E.emote, x + 3.4 * u, y - 3.7 * u, u * .7, 1, t);
+      label(E.fa, x, y + 4.1 * u, 22);
+    });
+  };
+  LOOPS.studentFaces.len = 4;
 })();
