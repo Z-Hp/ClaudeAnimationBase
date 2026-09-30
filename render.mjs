@@ -11,6 +11,7 @@
 //     node render.mjs --clip [--range=0:4] --out=out/video.mp4                               straight to MP4 (one worker)
 //     node render.mjs --frames [--range=0:8] --workers=4                                     JPEG frames → out/frames (parallel, resumable)
 //     node render.mjs --encode --out=out/video.mp4                                           out/frames → MP4
+//         (add --small for about a third of the size, --tiny for 720p at about a tenth; or --crf=N, --height=N)
 //   Standalone loops (LOOPS in the page): add --loop=<name> to any of the above (times are then loop times), or
 //     node render.mjs --loop=emotions --png --out=out/loop_emotions                          one cycle as PNGs (for GIFs)
 //   Music: --audio=assets/song.mp3 (or PROJECT.audio; --audio=none for silence) is muxed into --clip and --encode. Other flags: --fps=24,
@@ -47,10 +48,16 @@ if (args.encode) {
   const out = args.out || 'out/video.mp4', n = readdirSync(FRAMES_DIR).filter(f => f.endsWith('.jpg')).length;
   // the song from --audio, else PROJECT.audio in src/config.js; --audio=none for a silent video
   const audio = args.audio === 'none' ? null : args.audio || (readFileSync('src/config.js', 'utf8').match(/audio:\s*'([^']+)'/) || [])[1];
-  console.log(`encoding ${n} frames → ${out}${audio ? ' with ' + audio : ''}`);
+  // size: the default is near-lossless (big); --small keeps 1080p at a lower quality (about a third of the size);
+  // --tiny is 720p for messengers and social media (about a tenth). --crf=N (17 best … 30 smallest) and --height=N
+  // set them by hand.
+  const Q = args.tiny ? { crf: 27, height: 720, ab: '128k' } : args.small ? { crf: 24, ab: '160k' } : { crf: 17, ab: '192k' };
+  const crf = String(args.crf ?? Q.crf), height = args.height ?? Q.height;
+  console.log(`encoding ${n} frames → ${out}${audio ? ' with ' + audio : ''} (crf ${crf}${height ? ', ' + height + 'p' : ''})`);
   await run('ffmpeg', ['-y', '-loglevel', 'error', '-stats', '-framerate', String(fps), '-i', `${FRAMES_DIR}/f%05d.jpg`,
-    ...(audio ? ['-i', audio, '-map', '0:v', '-map', '1:a', '-c:a', 'aac', '-b:a', '192k', '-shortest'] : []),
-    '-c:v', 'libx264', '-preset', 'slow', '-crf', '17', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out]);
+    ...(audio ? ['-i', audio, '-map', '0:v', '-map', '1:a', '-c:a', 'aac', '-b:a', Q.ab, '-shortest'] : []),
+    ...(height ? ['-vf', `scale=-2:${height}:flags=lanczos`] : []),
+    '-c:v', 'libx264', '-preset', 'slow', '-crf', crf, '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out]);
   console.log('wrote ' + out);
   process.exit(0);
 }
