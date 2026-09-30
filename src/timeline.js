@@ -35,6 +35,7 @@ function placeholder(t) {
 //   start of shot B: if (lt < .3) brushWipe(.5 + lt / .6);
 function brushWipe(p, cols = [PAL.clayDk, PAL.clay]) {
   if (p <= 0 || p >= 1) return;
+  flushLetters();   // lettering queued so far goes under the wipe, not on top of it
   const [c1, c2] = cols, n = 5, bh = (H + 420) / n + 40;
   push(); translate(W / 2, H / 2); rotate(-.1); translate(-W / 2, -H / 2);
   for (let i = 0; i < n; i++) {

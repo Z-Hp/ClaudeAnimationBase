@@ -126,7 +126,7 @@ function irisShape(pts, col = PAL.ink, far = 4000) {
     paint([a2, b2, out(b2), out(a2)], { wash: col, washOp: 255, ink: null });
   }
 }
-function iris(cx, cy, r, col = PAL.ink) { if (r < 4) paint(rectPts(-60, -60, W + 120, H + 120), { wash: col, ink: null }); else irisShape(ellPts(cx, cy, r, r, 40), col); }
+function iris(cx, cy, r, col = PAL.ink) { flushLetters(); if (r < 4) paint(rectPts(-60, -60, W + 120, H + 120), { wash: col, ink: null }); else irisShape(ellPts(cx, cy, r, r, 40), col); }
 
 let T = 0, paperG = null, grainC = null, letG = null, glowTex = null, outC = null, outX = null;
 let LETTERS = [];
