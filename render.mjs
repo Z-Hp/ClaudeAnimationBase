@@ -16,7 +16,7 @@
 //   Music: --audio=assets/song.mp3 (or PROJECT.audio; --audio=none for silence) is muxed into --clip and --encode. Other flags: --fps=24,
 //   --chrome=<path to Chrome/Chromium>, --offline (skip Google Fonts; use the local fonts only),
 //   --lite (flat washes instead of watercolour fills: fast previews without a GPU; see LITE in core.js),
-//   --verbose (show the page's WebGL and network warnings too).
+//   --verbose (show the page's WebGL and network warnings too), --style=<name> (a painting style from src/styles.js).
 import puppeteer from 'puppeteer-core';
 import { spawn } from 'node:child_process';
 import { mkdirSync, writeFileSync, existsSync, statSync, renameSync, readdirSync, readFileSync } from 'node:fs';
@@ -87,7 +87,7 @@ async function openPage(tag = '') {
     await page.setRequestInterception(true);
     page.on('request', r => /fonts\.(googleapis|gstatic)\.com/.test(r.url()) ? r.abort() : r.continue());
   }
-  await page.goto(pathToFileURL(resolve('studio.html')).href + '?render' + (args.lite ? '&lite' : ''), { waitUntil: 'networkidle0' });
+  await page.goto(pathToFileURL(resolve('studio.html')).href + '?render' + (args.lite ? '&lite' : '') + (args.style ? '&style=' + args.style : ''), { waitUntil: 'networkidle0', timeout: 180000 });   // the first frame paints during load; slow styles need time
   await page.waitForFunction('window.ready === true', { timeout: 60000 });
   if (args.loop) {
     const ok = await page.evaluate(name => { if (!LOOPS[name]) return false; window.LOOP = LOOPS[name]; return true; }, args.loop);

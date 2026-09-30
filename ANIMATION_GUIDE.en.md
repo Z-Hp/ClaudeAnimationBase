@@ -413,6 +413,10 @@ clawd(x, y, 24, { ...feel('proud', t), aR: 1.2, armR: (u, sw) => paint(starPts(u
 
 ---
 
+## Painting style
+
+Every shape and line goes through `paint()` and `inkLine()`, so the style changes in one place: `style` in [src/config.js](src/config.js) (or `studio.html?style=...` and `render.mjs --style=...` to try one). The styles live in [src/styles.js](src/styles.js): `watercolor` (default), `gouache`, `pencil`, `flat`, `cartoon`, `cutout`, `chalk`. The first three paint with p5.brush; the other four draw plain p5 shapes and are fast even without a GPU. For `flat` and `cartoon`, this guide's rules about a handmade medium become "clean shapes and solid colour"; the rest (acting, timing, transitions) stay as they are.
+
 ## Music (optional)
 
 The kit doesn't need music, but it's built for it:

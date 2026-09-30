@@ -189,12 +189,16 @@ function paint(pts, o = {}) { centred(pts, (P) => paintAt(P, o)); }
 // GPU (about a minute a frame in software WebGL), so lite paints each fill as a flat, see-through wash instead. It's
 // for previews and GPU-less machines; render the final video without it.
 const LITE = typeof location !== 'undefined' && /[?&]lite\b/.test(location.search);
+// The painting style (src/styles.js): studio.html?style=flat (render.mjs --style=flat), else PROJECT.style, else watercolor.
+const STYLE = (typeof location !== 'undefined' && (location.search.match(/[?&]style=(\w+)/) || [])[1]) || PROJECT.style || 'watercolor';
 function liteFill(o) {
   if (!o.fill) return o;
   const op = (o.fillOp ?? 170) * .55;
   return o.wash ? { ...o, fill: null } : { ...o, fill: null, wash: o.fill, washOp: op };
 }
 function paintAt(pts, o) {
+  if (STY.native) return nativePaint(pts, o);
+  if (STY.adapt) o = STY.adapt(o);
   if (LITE) o = liteFill(o);
   if (o.wash || o.fill || o.hatch) {
     if (o.wash) brush.wash(o.wash, o.washOp ?? 255); else brush.noWash();
@@ -211,7 +215,10 @@ function paintAt(pts, o) {
   }
 }
 function inkLine(pts, sw = 1, col = PAL.ink, br = 'ink', curv = .5) {
-  centred(pts, (P) => { brush.noFill(); brush.noWash(); brush.noHatch(); brush.set(br, col, sw); brush.spline(P, curv); });
+  centred(pts, (P) => {
+    if (STY.native) return nativeLine(P, sw, col, br, curv);
+    brush.noFill(); brush.noWash(); brush.noHatch(); brush.set(STY.lineBrush ? STY.lineBrush(br) : br, col, sw); brush.spline(P, curv);
+  });
 }
 
 // ---------- lettering (drawn on the 2D compositor, under the paper grain) ----------
@@ -250,6 +257,7 @@ function drawLetters(c) {
 // p5.brush defers washes and strokes into a mask layer; a (tiny, off-screen) watercolor fill forces it to composite
 // now, so everything painted before this call really lands under whatever p5 draws next (letters, glow).
 function flushBrush() {
+  if (STY.native) return;   // native styles draw straight onto the canvas, in order
   push(); resetMatrix(); translate(-W / 2, -H / 2);
   brush.noStroke(); brush.noHatch(); brush.noWash(); brush.fill('#000000', 1); brush.fillBleed(0); brush.fillTexture(0, 0);
   brush.polygon([[-50, -50], [-40, -50], [-40, -40]]); brush.noFill(); pop();
@@ -268,7 +276,8 @@ function flushLetters() {
 function lcg(seed) { let s = seed; return () => (s = (s * 16807) % 2147483647) / 2147483647; }
 function makePaper() {
   const g = createGraphics(W, H); g.pixelDensity(1); const c = g.drawingContext, rnd = lcg(11);
-  c.fillStyle = PAL.paper; c.fillRect(0, 0, W, H);
+  c.fillStyle = STY.paper || PAL.paper; c.fillRect(0, 0, W, H);
+  if (STY.grain === false) return g;   // clean ground (flat, cartoon, chalk)
   for (let i = 0; i < 70; i++) { const x = rnd() * W, y = rnd() * H, r = 120 + rnd() * 380, gr = c.createRadialGradient(x, y, 0, x, y, r), a = .045 * rnd(); gr.addColorStop(0, `rgba(160,125,80,${a})`); gr.addColorStop(1, 'rgba(160,125,80,0)'); c.fillStyle = gr; c.fillRect(x - r, y - r, 2 * r, 2 * r); }
   c.lineWidth = 1;
   for (let i = 0; i < 1400; i++) { const x = rnd() * W, y = rnd() * H, l = 6 + rnd() * 26, a = rnd() * TAU; c.strokeStyle = `rgba(110,88,60,${.035 + rnd() * .06})`; c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + Math.cos(a + .6) * l * .5, y + Math.sin(a + .6) * l * .5, x + Math.cos(a) * l, y + Math.sin(a) * l); c.stroke(); }
@@ -306,7 +315,7 @@ function draw() {
   if (!window.ready) return;
   LETTERS = []; CAM = LAST_CAM = null;
   push(); translate(-W / 2, -H / 2);
-  BOILN = Math.floor(T * BOIL); CLAWD_N = 0; boilSeed('frame'); noiseSeed(77);
+  BOILN = Math.floor(T * (STY.boil ?? BOIL)); CLAWD_N = 0; boilSeed('frame'); noiseSeed(77);
   image(paperG, 0, 0);
   drawWorld(T);
   pop();
@@ -316,8 +325,9 @@ function composite(t) {
   c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1;
   c.drawImage(drawingContext.canvas, 0, 0, W, H);
   drawLetters(c);
-  c.globalCompositeOperation = 'multiply'; c.drawImage(grainC, 0, 0);
+  if (STY.grain !== false) { c.globalCompositeOperation = 'multiply'; c.drawImage(grainC, 0, 0); }
   c.globalCompositeOperation = 'source-over';
+  if (STY.post) STY.post(c);
 }
 window.renderAt = async (t, type = 'image/png', q = .92) => { T = t; await redraw(); composite(t); return outC.toDataURL(type, q); };
 // Contact sheet of several times, for visual checks: returns { url, ms[] }. crop = [x, y, w, h] fills each cell with just

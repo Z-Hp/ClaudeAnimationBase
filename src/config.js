@@ -3,5 +3,6 @@
 //   bpm:      the rhythm that bounces, dances and pulse() follow. Clawd always moves to some beat; if the video has music,
 //             set this to the song's tempo, and set offset to the time in seconds of its first downbeat.
 //   audio:    the song, muxed in by render.mjs --encode / --clip, and played by studio.html along with the scrubber.
+//   style:    the painting style (src/styles.js): watercolor, gouache, pencil, flat, cartoon, cutout or chalk.
 //   writtenDuration: the length the shots were first written for, before resync() fitted them to the song (story_sync.js).
-const PROJECT = { duration: 166.3, bpm: 115, offset: 0.51, audio: 'assets/music.m4a', writtenDuration: 168 };
+const PROJECT = { duration: 166.3, bpm: 115, offset: 0.51, audio: 'assets/music.m4a', writtenDuration: 168, style: 'watercolor' };
