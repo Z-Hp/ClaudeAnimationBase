@@ -60,7 +60,8 @@ function tintCols(o) {
 //   face:   eyes (a name, or [left, right] for mismatched eyes), mouth, lookX / lookY (-1..1), squint 0..1, blush 0..1,
 //           gloom 0..1 (dark forehead with gloom lines), lid 0..1 (lunchbox mouth, front view only), seed (blink timing)
 //   colour: col / dk / lt, or tint + tintK
-//   extras: hat, emote + emoteK (0..1 pop) + emoteAge (s since it appeared), draw(u, sw), armL(u, sw), armR(u, sw)
+//   extras: hat, glasses (true, or the frame colour), tassel (extra swing for the 'grad' hat's tassel), emote + emoteK
+//           (0..1 pop) + emoteAge (s since it appeared), draw(u, sw), armL(u, sw), armR(u, sw)
 //   boil:   boilKey (a stable id for its boil seeds; defaults to call order, so set it if characters come and go mid-shot)
 function clawd(x, y, u, o = {}) {
   // each part boils from its own seed (see boilSeed), so a moving arm never re-boils the body, or the next character
@@ -137,9 +138,10 @@ function clawd(x, y, u, o = {}) {
       rs('eyes'); eyes(u, o, sw, F.sides, sm); rs('mouth');
       push(); translate(F.mx * u, 0); mouth(u, o.mouth, sw); pop();
       if (['cat', 'masq', 'bowtie'].includes(o.hat)) faceHat(u, o.hat, sw, F.sides);
+      if (o.glasses && sm < .5) { rs('glasses'); glasses(u, sw, F.sides, o.glasses === true ? PAL.ink : o.glasses); }
       pop();
     }
-    rs('hat'); push(); translate(V.hat * u, 0); scale(V.hw, 1); hat(u, o.hat, sw); pop();
+    rs('hat'); push(); translate(V.hat * u, 0); scale(V.hw, 1); hat(u, o.hat, sw, o); pop();
   }
   V.arms.filter(a => a[3] === 1).forEach(arm);
   rs('draw'); if (o.draw) o.draw(u, sw);
@@ -180,7 +182,8 @@ function lunchbox(u, o, sw, J, lid, col, dk, lt) {
   paint(rectPts(-5 * u, -8 * u, 10 * u, 2.9 * u, J), { ink: PAL.ink, sw });
   if (o.gloom > .02) gloom(u, sw, VIEWS.front, o.gloom);
   eyes(u, o, sw, [-1, 1], 0);
-  hat(u, o.hat, sw);
+  if (o.glasses) glasses(u, sw, [-1, 1], o.glasses === true ? PAL.ink : o.glasses);
+  hat(u, o.hat, sw, o);
   pop();
 }
 
@@ -357,10 +360,24 @@ function mouth(u, m, sw) {
   }
 }
 
+// Round glasses, drawn over the eyes in face space: two lenses and a bridge, or one lens and its arm in profile.
+function glasses(u, sw, sides, col = PAL.ink) {
+  const P = pts => pts.map(([a, b]) => [a * u, b * u]);
+  if (sides.length > 1) {
+    inkLine(P([[-1.05, -6.15], [0, -6.45], [1.05, -6.15]]), sw * .7, col, 'ink', .5);
+    for (const s of [-1, 1]) inkLine(P([[s * 3.95, -6.3], [s * 5, -6.5]]), sw * .6, col, 'ink', 0);
+  } else inkLine(P([[1.05, -6.3], [-5, -6.55]]), sw * .6, col, 'ink', 0);
+  for (const s of sides) {
+    paint(ellPts(s * 2.5 * u, -6 * u, 1.45 * u, 1.5 * u, 20), { ink: col, sw: sw * .75 });
+    inkLine(P([[s * 2.5 - .9, -6.45], [s * 2.5 - .45, -7.05]]), sw * .4, PAL.cream, 'inkfine', 0);   // glint
+  }
+}
+
 // ---------- hats ----------
 // party, hard, crown, halo, wizard, hood, top, fedora, band, sweatband, beanie, bow, flower, headphones, cat (ears; the
-// whiskers show in the front and 3/4 views), plus face pieces for the front and 3/4 views: masq, mask, bowtie
-function hat(u, h, sw) {
+// whiskers show in the front and 3/4 views), grad (a mortarboard whose tassel swings; o.tassel adds to the swing),
+// plus face pieces for the front and 3/4 views: masq, mask, bowtie
+function hat(u, h, sw, o = {}) {
   if (!h || h === 'mask' || h === 'masq' || h === 'bowtie') return;
   const P = pts => pts.map(([a, b]) => [a * u, b * u]);
   if (h === 'party') {
@@ -406,6 +423,15 @@ function hat(u, h, sw) {
   } else if (h === 'headphones') {
     inkLine(P([[-5.1, -5.8], [-4.6, -9.4], [0, -10.6], [4.6, -9.4], [5.1, -5.8]]), sw * 2.4, PAL.ink, 'ink', .6);
     for (const s of [-1, 1]) paint(rrPts((s < 0 ? -6.1 : 4.6) * u, -7.4 * u, 1.5 * u, 2.8 * u, .6 * u), { wash: PAL.violet, fill: PAL.rose, fillOp: 50, ink: PAL.ink, sw: sw * .7 });
+  } else if (h === 'grad') {
+    const board = '#1E3A8A', gold = '#F0BE46';
+    paint(rectPts(-2.9 * u, -9.3 * u, 5.8 * u, 1.5 * u, u * .03), { wash: mixCol(board, PAL.ink, .25), ink: PAL.ink, sw: sw * .8 });
+    paint(P([[-5.2, -9.5], [0, -10.9], [5.2, -9.5], [0, -8.5]]), { wash: board, ink: PAL.ink, sw: sw * .8 });
+    // the tassel: a cord from the button to the front corner, then hanging down and swinging (with o.tassel on top)
+    const a = .18 * Math.sin(T * 3.1) + (o.tassel || 0), L = 2.3, tx = 4.6 + Math.sin(a) * L, ty = -9.6 + Math.cos(a) * L;
+    inkLine(P([[0, -9.7], [2.4, -9.9], [4.6, -9.6]]), sw * .7, gold, 'ink', .5);
+    paint(ribbon(P([[4.6, -9.6], [4.6 + Math.sin(a) * L * .5, -9.6 + Math.cos(a) * L * .5], [tx, ty]]), .3 * u, .75 * u), { wash: gold, ink: PAL.ink, sw: sw * .5 });
+    paint(ellPts(0, -9.7 * u, .42 * u, .26 * u, 10), { wash: gold, ink: PAL.ink, sw: sw * .45 });
   } else if (h === 'cat') {
     for (const s of [-1, 1]) {
       paint([[s * 4.9 * u, -7.9 * u], [s * 4.3 * u, -11 * u], [s * 1.9 * u, -7.9 * u]], { wash: PAL.clay, ink: PAL.ink, sw: sw * .8 });
@@ -584,7 +610,8 @@ function feel(name, t, over = {}) {
 // An emotion timeline with ACTED changes: keys = [[t0, 'neutral'], [t1, 'surprised'], [t2, 'happy', { emote: 'music' }]].
 // Around each change the eyes squeeze shut and the body squashes just before (anticipation), and the face swaps
 // under the squint. Then a take fires (a squash-stretch the size of the new emotion's `take`), the body settles into
-// its new motion with overshoot, colour, blush and gloom cross-fade, and the new emote pops in. o.take scales every take.
+// its new motion with overshoot, colour, blush and gloom cross-fade, and the new emote pops in. o.take scales every take;
+// o.col / o.dk / o.lt give the character's own base colours, for the cross-fade (characters that aren't clay-coloured).
 // Spread the result into clawd() and add any other pose: clawd(x, y, u, { ...emotions(t, keys), view: 'q' }).
 function emotions(t, keys, o = {}) {
   let i = 0; while (i + 1 < keys.length && t >= keys[i + 1][0]) i++;
@@ -599,7 +626,7 @@ function emotions(t, keys, o = {}) {
     const base = { dy: 0, sq: 0, aL: .2, aR: .2, rot: 0, dx: 0, lookX: 0, lookY: 0 };
     const k = backOut(seg(age, 0, .4)), kc = ease(seg(age, 0, .3));
     for (const f in base) cur[f] = lerp(prev[f] ?? base[f], cur[f] ?? base[f], k);
-    const a = tintCols(prev), b = tintCols(cur);
+    const own = { col: o.col, dk: o.dk, lt: o.lt }, a = tintCols({ ...own, ...prev }), b = tintCols({ ...own, ...cur });
     cur.col = mixCol(a.col, b.col, kc); cur.dk = mixCol(a.dk, b.dk, kc); cur.lt = mixCol(a.lt, b.lt, kc); cur.tint = null;
     for (const f of ['blush', 'gloom', 'lid']) cur[f] = lerp(prev[f] || 0, cur[f] || 0, kc);
   }

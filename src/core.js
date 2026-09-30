@@ -6,7 +6,9 @@ const TAU = Math.PI * 2;
 const PAL = {
   paper: '#F3EBDC', ink: '#2B2233', clay: '#D97757', clayDk: '#A84D33', clayLt: '#F2A283',
   night: '#1F2550', indigo: '#2F3C7A', rose: '#E27A92', ochre: '#E8AA38', sap: '#6E9F58',
-  teal: '#3A9C98', violet: '#7B5CA8', cream: '#FFF5E2', sky: '#8EC3E6'
+  teal: '#3A9C98', violet: '#7B5CA8', cream: '#FFF5E2', sky: '#8EC3E6',
+  // Farda Institute's cosmic brand (the website's blue, cyan, indigo and purple), softened for paint
+  brand: '#2F66E0', brandDk: '#1E3A8A', brandLt: '#8FB4F5', cyan: '#3CCFE6', cosmos: '#4A45C9', nebula: '#A45AE8', deep: '#121833'
 };
 
 const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
@@ -183,7 +185,17 @@ function centred(pts, draw) {
   push(); translate(cx, cy); draw(pts.map(([x, y]) => [x - cx, y - cy])); pop();
 }
 function paint(pts, o = {}) { centred(pts, (P) => paintAt(P, o)); }
+// Lite mode (studio.html?lite, or render.mjs --lite): watercolour fills are by far the slowest thing to paint without a
+// GPU (about a minute a frame in software WebGL), so lite paints each fill as a flat, see-through wash instead. It's
+// for previews and GPU-less machines; render the final video without it.
+const LITE = typeof location !== 'undefined' && /[?&]lite\b/.test(location.search);
+function liteFill(o) {
+  if (!o.fill) return o;
+  const op = (o.fillOp ?? 170) * .55;
+  return o.wash ? { ...o, fill: null } : { ...o, fill: null, wash: o.fill, washOp: op };
+}
 function paintAt(pts, o) {
+  if (LITE) o = liteFill(o);
   if (o.wash || o.fill || o.hatch) {
     if (o.wash) brush.wash(o.wash, o.washOp ?? 255); else brush.noWash();
     if (o.fill) { brush.fill(o.fill, o.fillOp ?? 170); brush.fillBleed(o.bleed ?? .1); brush.fillTexture(o.tex ?? .4, o.border ?? .35); } else brush.noFill();
@@ -203,7 +215,10 @@ function inkLine(pts, sw = 1, col = PAL.ink, br = 'ink', curv = .5) {
 }
 
 // ---------- lettering (drawn on the 2D compositor, under the paper grain) ----------
-// Use sparingly: see "No text" in ANIMATION_GUIDE.md. Clawd's emotes are painted and never need these.
+// Use sparingly: see "Text" in ANIMATION_GUIDE.md. Clawd's emotes are painted and never need these.
+// Persian (or Arabic) text is detected and set right to left in Vazirmatn, with its letters joined by the browser.
+// reveal: 0..1 writes it in from its right edge (the way Persian is written); weight: the font weight (default 800).
+const RTL = /[\u0600-\u06FF]/;
 function letter(txt, x, y, size, color, o = {}) {
   if (CAM && !o.screen) { [x, y] = toScreen(x, y); size *= CAM.zoom; o = { ...o, rot: (o.rot || 0) + CAM.rot }; if (o.font) o.font = o.font.replace(/(\d+(\.\d+)?)px/, (m, v) => (v * CAM.zoom) + 'px'); }
   LETTERS.push({ txt, x, y, size, color, ...o });
@@ -217,8 +232,14 @@ function drawLetters(c) {
   for (const L of LETTERS) {
     const k = L.pop != null ? backOut(L.pop) : 1; if (k <= .01) continue;
     c.save(); c.translate(L.x, L.y); c.rotate(L.rot || 0); c.scale(k, k); c.globalAlpha = L.alpha ?? 1;
-    c.font = L.font || `${L.size}px "Permanent Marker", "Comic Sans MS", cursive`;
-    c.textAlign = L.align || 'center'; c.textBaseline = 'middle';
+    const rtl = RTL.test(L.txt);
+    c.font = L.font || (rtl ? `${L.weight || 800} ${L.size}px Vazirmatn, Tahoma, sans-serif` : `${L.size}px "Permanent Marker", "Comic Sans MS", cursive`);
+    c.direction = rtl ? 'rtl' : 'ltr'; c.textAlign = L.align || 'center'; c.textBaseline = 'middle';
+    if (L.reveal != null && L.reveal < 1) {   // write it in from the reading start: the right for Persian, the left otherwise
+      if (L.reveal <= 0) { c.restore(); continue; }
+      const w = c.measureText(L.txt).width + L.size, al = c.textAlign, x0 = al === 'center' ? -w / 2 : al === 'right' || al === (rtl ? 'start' : 'end') ? -w : 0;
+      c.beginPath(); rtl ? c.rect(x0 + w * (1 - L.reveal), -L.size * 2, w * L.reveal, L.size * 4) : c.rect(x0, -L.size * 2, w * L.reveal, L.size * 4); c.clip();
+    }
     if (L.stroke) { c.lineJoin = 'round'; c.lineWidth = L.size * .12; c.strokeStyle = L.stroke; c.strokeText(L.txt, 0, 0); }
     if (L.ink !== false) { c.fillStyle = PAL.ink; c.fillText(L.txt, L.size * .045, L.size * .055); }
     c.fillStyle = L.color; c.fillText(L.txt, 0, 0);
@@ -277,7 +298,7 @@ async function setup() {
   brush.scaleBrushes(5); defineBrushes();
   paperG = makePaper(); grainC = makeGrain(); glowTex = makeGlowTex(); letG = createGraphics(W, H); letG.pixelDensity(1);
   outC = document.getElementById('out'); outX = outC.getContext('2d');
-  await document.fonts.load('100px "Permanent Marker"');
+  await Promise.all(['100px "Permanent Marker"', '800 100px Vazirmatn', '400 100px Vazirmatn'].map(f => document.fonts.load(f).catch(() => {})));
   window.ready = true;
   if (!location.search.includes('render')) devUI();
 }

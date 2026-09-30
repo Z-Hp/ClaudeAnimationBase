@@ -14,7 +14,8 @@
 //   Standalone loops (LOOPS in the page): add --loop=<name> to any of the above (times are then loop times), or
 //     node render.mjs --loop=emotions --png --out=out/loop_emotions                          one cycle as PNGs (for GIFs)
 //   Music: --audio=assets/song.mp3 (or PROJECT.audio) is muxed into --clip and --encode. Other flags: --fps=24,
-//   --chrome=<path to Chrome/Chromium>.
+//   --chrome=<path to Chrome/Chromium>, --offline (skip Google Fonts; use the local fonts only),
+//   --lite (flat washes instead of watercolour fills: fast previews without a GPU; see LITE in core.js).
 import puppeteer from 'puppeteer-core';
 import { spawn } from 'node:child_process';
 import { mkdirSync, writeFileSync, existsSync, statSync, renameSync, readdirSync } from 'node:fs';
@@ -70,13 +71,26 @@ async function openPage(tag = '') {
   const page = await browser.newPage();
   page.on('console', m => { if (['error', 'warn'].includes(m.type())) console.log(`[page${tag}]`, m.text()); });
   page.on('pageerror', e => console.log(`[page error${tag}]`, e.message));
-  await page.goto(pathToFileURL(resolve('studio.html')).href + '?render', { waitUntil: 'networkidle0' });
+  // --offline: skip Google Fonts (a machine without internet, or behind a proxy that stalls them); the page falls back
+  // to the local fonts (Vazirmatn comes from node_modules) instead of waiting on the network.
+  if (args.offline) {
+    await page.setRequestInterception(true);
+    page.on('request', r => /fonts\.(googleapis|gstatic)\.com/.test(r.url()) ? r.abort() : r.continue());
+  }
+  await page.goto(pathToFileURL(resolve('studio.html')).href + '?render' + (args.lite ? '&lite' : ''), { waitUntil: 'networkidle0' });
   await page.waitForFunction('window.ready === true', { timeout: 60000 });
   if (args.loop) {
     const ok = await page.evaluate(name => { if (!LOOPS[name]) return false; window.LOOP = LOOPS[name]; return true; }, args.loop);
     if (!ok) { console.error(`no loop named "${args.loop}"`); process.exit(1); }
   }
   return page;
+}
+// Software WebGL (--soft-gl) can't share the machine between several pages: extra workers come back with silently black
+// frames. So it renders with one.
+function workerCount(n) {
+  const w = +(args.workers || n);
+  if (args['soft-gl'] && w > 1) { console.log(`--soft-gl: rendering with 1 worker (asked for ${w}); more give black frames`); return 1; }
+  return w;
 }
 const frameOf = async (page, t, type, q) => {
   const url = await page.evaluate((t, type, q) => window.renderAt(t, type, q), t, type, q);
@@ -106,7 +120,7 @@ if (args.sheet || args.strip) {
   // PNG sequence (for GIFs): a loop's full cycle (frame n equals frame 0, so it isn't rendered), or --range=a:b.
   const probe = await openPage(), len = await lengthOf(probe); await probe.close();
   const [a, b] = args.range ? span(args.range) : [0, len], n = Math.round((b - a) * fps);
-  const out = args.out || `out/${args.loop ? 'loop_' + args.loop : 'png'}`, workers = +(args.workers || 3); mkdirSync(out, { recursive: true });
+  const out = args.out || `out/${args.loop ? 'loop_' + args.loop : 'png'}`, workers = workerCount(3); mkdirSync(out, { recursive: true });
   let next = 0; const start = Date.now();
   await Promise.all(Array.from({ length: workers }, async (_, w) => {
     const page = await openPage('#' + w);
@@ -116,7 +130,7 @@ if (args.sheet || args.strip) {
 } else if (args.frames) {
   // Parallel and resumable: each worker pulls the next missing frame; files are written atomically.
   const probe = await openPage(), len = await lengthOf(probe); await probe.close();
-  const [a, b] = args.range ? span(args.range) : [0, len], workers = +(args.workers || 4);
+  const [a, b] = args.range ? span(args.range) : [0, len], workers = workerCount(4);
   mkdirSync(FRAMES_DIR, { recursive: true });
   const first = Math.round(a * fps), last = Math.min(Math.ceil(len * fps) - 1, Math.round(b * fps) - 1);
   const todo = []; for (let i = first; i <= last; i++) { const f = `${FRAMES_DIR}/f${String(i).padStart(5, '0')}.jpg`; if (!existsSync(f) || statSync(f).size < 1000) todo.push(i); }
