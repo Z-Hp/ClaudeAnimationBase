@@ -26,8 +26,8 @@ const LOOKS = {
   arman: { fa: 'آرمان', skin: STU.skin, skinDk: STU.skinDk, iris: STU.iris, hair: 'curly', hairCol: STU.hair, hairLt: STU.hairLt,
            top: 'hoodie', col: STU.hoodie, dk: STU.hoodieDk, pants: STU.pants, pantsDk: STU.pantsDk, shoe: STU.shoe, sole: STU.glow,
            pack: true, glasses: 'smart', freckles: true, cargo: true, legK: 1, torsoK: 1 },
-  // the Farda teacher: young, warm; long black hair, an olive overshirt, a lanyard with the Farda badge, wide pants
-  mentor: { fa: 'مدرس فردا', skin: '#F3CDB0', skinDk: '#D69C7C', iris: '#3E2A22', hair: 'long', hairLen: 1, hairCol: '#26232C', hairLt: '#55525F',
+  // the Farda teacher: young, warm; shoulder-length black hair, an olive overshirt, the Farda staff badge, wide pants
+  mentor: { fa: 'مدرس فردا', skin: '#F3CDB0', skinDk: '#D69C7C', iris: '#3E2A22', hair: 'long', hairLen: .42, hairCol: '#26232C', hairLt: '#55525F',
             top: 'jacket', col: '#5E7148', dk: '#465634', inner: '#F4EFE6', pants: '#26252F', pantsDk: '#1B1A22', wide: .8, shoe: '#EDE9E2', sole: '#B9BDC8',
             lanyard: true, lash: 2, legK: 1.32, torsoK: 1.12, headK: .9 },
   // classmates at Farda
@@ -209,7 +209,11 @@ function stuTorso(u, sw, view) {
       inkLine(P([[-3.45, -7.4], [-3.45, -5.2]]), sw * .9, STU.glow, 'ink', 0);
       inkLine(P([[-1.5, -8.3], [-.7, -8.1], [-.5, -6.2]]), sw * 1.8, STU.packDk, 'ink', .4);   // strap over the shoulder
     }
-    if (LK.lanyard) { inkLine(P([[.9, -8.3], [1.35, -6.9]]), sw * .5, PAL.ink, 'inkfine', 0); paint(rrPts(1.2 * u, -6.9 * u, .45 * u, .95 * u, .1 * u), { wash: PAL.cream, ink: PAL.ink, sw: sw * .4 }); }
+    if (LK.lanyard) {   // the staff badge, edge-on
+      paint(ribbon(P([[.55, -8.4], [1.05, -7.6], [1.45, -7]]), .3 * u, .3 * u), { wash: PAL.brand, ink: PAL.ink, sw: sw * .4 });
+      paint(rrPts(1.25 * u, -7.05 * u, .55 * u, 2 * u, .12 * u), { wash: PAL.cream, ink: PAL.ink, sw: sw * .5 });
+      paint(rectPts(1.25 * u, -7.05 * u, .55 * u, .55 * u), { wash: PAL.brand, ink: null });
+    }
     paint(rectPts(-.55 * u, -9.4 * u, 1.1 * u, 1.2 * u), { wash: LK.skin, ink: PAL.ink, sw: sw * .6 });
     if (top === 'hoodie') paint(P([[-1.9, -8.2], [-1.6, -9.2], [-.5, -9.2], [.2, -8.2]]), { wash: LK.dk, ink: PAL.ink, sw: sw * .7, curv: .4 });   // the hood
     else paint(P([[-.8, -8.45], [.6, -8.45], [.75, -8.1], [-.9, -8.1]]), { wash: top === 'sweater' ? LK.dk : LK.inner, ink: PAL.ink, sw: sw * .5 });   // collar
@@ -229,6 +233,7 @@ function stuTorso(u, sw, view) {
       inkLine(P([[-.6, -8.2], [0, -8.75], [.6, -8.2]]), sw * 1.2, STU.packDk, 'ink', .5);   // the handle
     }
     paint(rectPts(-.55 * u, -9.4 * u, 1.1 * u, 1.1 * u), { wash: LK.skin, ink: PAL.ink, sw: sw * .6 });
+    if (LK.lanyard) paint(ribbon(P([[-.75, -8.45], [0, -8.3], [.75, -8.45]]), .3 * u, .3 * u), { wash: PAL.brand, ink: PAL.ink, sw: sw * .4 });   // the lanyard round the neck
     return;
   }
   if (top === 'hoodie') {
@@ -268,13 +273,7 @@ function stuTorso(u, sw, view) {
     if (!suit) paint(rectPts((1.35 + F) * u, -6.9 * u, 1 * u, .9 * u), { wash: LK.dk, ink: PAL.ink, sw: sw * .45 });   // chest pocket
     else paint(P([[1.4 + F, -6.8], [2.2 + F, -6.8], [2.1 + F, -6.55], [1.5 + F, -6.55]]), { wash: LK.inner, ink: null });   // pocket square
   }
-  if (LK.lanyard) {   // the Farda badge on a lanyard
-    for (const s of [-1, 1]) inkLine(P([[s * .55 + F, -8.3], [s * .3 + F, -7.2], [F, -6.65]]), sw * .5, PAL.ink, 'inkfine', .4);
-    paint(rrPts((-.5 + F) * u, -6.7 * u, 1 * u, 1.3 * u, .15 * u), { wash: PAL.cream, ink: PAL.ink, sw: sw * .5 });
-    paint(rectPts((-.5 + F) * u, -6.7 * u, 1 * u, .3 * u), { wash: PAL.brand, ink: null });
-    inkLine(P([[-.25 + F, -5.85], [.25 + F, -5.85]]), sw * .5, PAL.brand, 'inkfine', 0);
-    paint(ellPts(F * u, -6.2 * u, .15 * u, .15 * u, 8), { wash: STU.glow, ink: null });
-  }
+  if (LK.lanyard) staffBadge(u, sw, F);
   if (LK.headphones) {   // headphones resting around the neck
     inkLine(P([[-1.2 + F, -8.2], [-1.1 + F, -9], [1.1 + F, -9], [1.2 + F, -8.2]]), sw * 1.2, PAL.ink, 'ink', .5);
     for (const s of [-1, 1]) paint(rrPts((s * 1.2 - .45 + F) * u, -8.55 * u, .9 * u, .8 * u, .3 * u), { wash: '#2B2F45', ink: PAL.ink, sw: sw * .6 });
@@ -288,6 +287,24 @@ function stuTorso(u, sw, view) {
       if (s > 0 && LK === LOOKS.arman) inkLine(P([[x0 + .05, -7.8], [x0 + .25, -6.3]]), sw * .8, STU.glow, 'ink', 0);
     }
   }
+}
+
+// The Farda staff badge on a brand-blue lanyard: big enough to read as "the teacher" from across the room. A blue header
+// with a graduation-cap mark, a photo, name lines and a cyan strip. x0 shifts it toward the heading in 3/4.
+function staffBadge(u, sw, x0 = 0) {
+  const P = pts => pts.map(([a, b]) => [(a + x0) * u, b * u]);
+  for (const s of [-1, 1]) paint(ribbon(P([[s * .75, -8.45], [s * .5, -7.6], [s * .18, -6.95]]), .34 * u, .3 * u), { wash: PAL.brand, ink: PAL.ink, sw: sw * .45 });
+  paint(rrPts((x0 - .22) * u, -7.1 * u, .44 * u, .32 * u, .08 * u), { wash: '#B9BDC8', ink: PAL.ink, sw: sw * .4 });   // the clip
+  paint(rrPts((x0 - .88) * u, -6.85 * u, 1.76 * u, 2.25 * u, .2 * u), { wash: PAL.cream, ink: PAL.ink, sw: sw * .65 });
+  paint(P([[-.88, -6.65], [-.68, -6.85], [.68, -6.85], [.88, -6.65], [.88, -6.2], [-.88, -6.2]]), { wash: PAL.brand, ink: null });   // header
+  paint(P([[-.45, -6.55], [0, -6.72], [.45, -6.55], [0, -6.38]]), { wash: PAL.cream, ink: null });   // the cap mark
+  paint(P([[-.22, -6.47], [.22, -6.47], [.2, -6.3], [-.2, -6.3]]), { wash: PAL.cream, ink: null });
+  inkLine(P([[.4, -6.56], [.42, -6.32]]), sw * .35, '#F0BE46', 'inkfine', 0);
+  paint(rrPts((x0 - .7) * u, -6.05 * u, .62 * u, .72 * u, .08 * u), { wash: '#CFE3F5', ink: PAL.ink, sw: sw * .35 });   // photo
+  paint(ellPts((x0 - .39) * u, -5.72 * u, .2 * u, .22 * u, 10), { wash: LK.skin, ink: null });
+  paint(P([[-.62, -5.52], [-.39, -5.62], [-.16, -5.52], [-.12, -5.36], [-.66, -5.36]]), { wash: LK.col, ink: null });
+  for (const [y, w] of [[-5.9, .52], [-5.62, .4]]) inkLine(P([[.1, y], [.1 + w, y]]), sw * .55, '#6E7690', 'inkfine', 0);
+  paint(rectPts((x0 - .7) * u, -5.05 * u, 1.4 * u, .17 * u), { wash: STU.glow, ink: null });   // the cyan strip
 }
 
 // The head, centred on the current origin.
@@ -679,7 +696,7 @@ function holo(x, y, w, h, k = 1) {
     faces.forEach(([n, fa, over], i) => {
       const x = 1800 - (i % 3) * 200, y = i < 3 ? 200 : 450, u = 18, E = expr(n, { seed: i, ...over });
       boilSeed('tface ' + i); headOf('mentor', x, y, u, { ...E, tilt: 0 });
-      label(fa, x, y + 8.7 * u, 21);
+      label(fa, x, y + 5.6 * u, 21);
     });
     label('ژست‌ها', 560, 712, 30);
     const G = 1030, u2 = 17;
