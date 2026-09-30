@@ -36,7 +36,7 @@ npm install
 node render.mjs --clip --out=out/video.mp4
 ```
 
-این دستور ویدیوی معرفی را از [src/scenes/farda_intro.js](src/scenes/farda_intro.js) رندر می‌کند. برای جلو و عقب بردن ویدیو، [studio.html](studio.html) را در Chrome باز کن. با `?loop=fardi` برگه‌ی مدل فردی، و با `?loop=emotions` یا `?loop=views` برگه‌های Clawd را می‌بینی. `?lite` حالت سبک را روشن می‌کند. اگر Chrome در جای استاندارد نیست، `--chrome=<مسیر>` بده یا `CHROME_PATH` را تنظیم کن.
+این دستور ویدیوی داستانی «از امروز به فردا بیایید» (۲ دقیقه و ۴۸ ثانیه؛ `src/scenes/story_*.js`، استوری‌بورد در [STORYBOARD_STORY.md](STORYBOARD_STORY.md)) را رندر می‌کند. برای ویدیوی معرفی ۲۴ ثانیه‌ای، در `studio.html` تگ‌های `story_*.js` را با `farda_intro.js` عوض کن و در `src/config.js` مقدار `duration` را `24` بگذار. برای جلو و عقب بردن ویدیو، [studio.html](studio.html) را در Chrome باز کن. با `?loop=fardi` برگه‌ی مدل فردی، و با `?loop=emotions` یا `?loop=views` برگه‌های Clawd را می‌بینی. `?lite` حالت سبک را روشن می‌کند. اگر Chrome در جای استاندارد نیست، `--chrome=<مسیر>` بده یا `CHROME_PATH` را تنظیم کن.
 
 **بدون کارت گرافیک:** پرکردن‌های آبرنگیِ p5.brush بدون GPU خیلی کندند. `--soft-gl --lite` اضافه کن:
 
