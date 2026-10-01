@@ -38,8 +38,8 @@ function seatAt(who, y, u) { const B = bodyOf(LOOKS[who]); return y - (B.shoulde
 function room(t, mode, o = {}) {
   const S = SETS[mode];
   boilSeed('room wall ' + mode);
-  paint(rectPts(-400, -300, W + 800, H + 600), { wash: S.wall, ink: null });
-  paint(rectPts(-400, 760, W + 800, 500), { wash: S.wallDk, ink: null });
+  paint(rectPts(-1400, -1300, W + 2800, H + 2600), { wash: S.wall, ink: null });
+  paint(rectPts(-1400, 760, W + 2800, 1800), { wash: S.wallDk, ink: null });
   // the window
   const wx = o.winX ?? 230, wy = 150, ww = 430, wh = 400;
   boilSeed('room window');
@@ -75,8 +75,8 @@ function room(t, mode, o = {}) {
 function desk(y, mode, o = {}) {
   const S = SETS[mode] || SETS.night;
   boilSeed('desk ' + y);
-  paint(rectPts(-300, y, W + 600, H - y + 400), { wash: S.deskDk, ink: null });
-  paint(rectPts(-300, y - 12, W + 600, 34), { wash: S.desk, ink: null });
+  paint(rectPts(-1300, y, W + 2600, H - y + 1400), { wash: S.deskDk, ink: null });
+  paint(rectPts(-1300, y - 12, W + 2600, 34), { wash: S.desk, ink: null });
   inkLine([[-50, y - 12], [W / 2, y - 14], [W + 50, y - 12]], 1.1, PAL.ink, 'ink', .5);
   inkLine([[-50, y + 22], [W / 2, y + 20], [W + 50, y + 23]], .8, PAL.ink, 'ink', .5);
   if (mode === 'lamp' || o.lamp) {   // a desk lamp, lit
@@ -102,8 +102,8 @@ function laptopBack(x, y, s, col = '#A8C4F0', k = 1) {
 function greyClass(t, o = {}) {
   const S = SETS.grey;
   boilSeed('grey wall');
-  paint(rectPts(-400, -300, W + 800, H + 600), { wash: S.wall, ink: null });
-  paint(rectPts(-400, 470, W + 800, 900), { wash: S.floor, ink: null });
+  paint(rectPts(-1400, -1300, W + 2800, H + 2600), { wash: S.wall, ink: null });
+  paint(rectPts(-1400, 470, W + 2800, 1900), { wash: S.floor, ink: null });
   inkLine([[-100, 470], [W / 2, 468], [W + 100, 471]], .9, mixCol(S.wall, PAL.ink, .4), 'ink', .5);
   boilSeed('grey board');
   paint(rectPts(520, 110, 880, 300), { wash: S.board, ink: '#6E5A48', sw: 2 });
@@ -153,9 +153,9 @@ function crowdBack(x, y, u, L, key) {
 function fardaRoom(t, o = {}) {
   const S = SETS.farda;
   boilSeed('farda wall');
-  paint(rectPts(-400, -300, W + 800, H + 600), { wash: S.wall, ink: null });
-  paint(rectPts(-400, 820, W + 800, 500), { wash: S.floor, ink: null });
-  paint(rectPts(-400, 640, W + 800, 16), { wash: mixCol(PAL.brand, S.wall, .6), ink: null });   // a brand-blue stripe along the wall
+  paint(rectPts(-1400, -1300, W + 2800, H + 2600), { wash: S.wall, ink: null });
+  paint(rectPts(-1400, 820, W + 2800, 1600), { wash: S.floor, ink: null });
+  paint(rectPts(-1400, 640, W + 2800, 16), { wash: mixCol(PAL.brand, S.wall, .6), ink: null });   // a brand-blue stripe along the wall
   const wx = o.winX ?? 1320;
   boilSeed('farda window');
   paint(rectPts(wx, 120, 460, 440), { wash: '#9FC7EE', ink: null });
@@ -176,10 +176,10 @@ function fardaRoom(t, o = {}) {
   paint([[pl - 50, 740], [pl + 50, 740], [pl + 38, 830], [pl - 38, 830]], { wash: PAL.ochre, ink: PAL.ink, sw: .7 });
 }
 // A table at the Farda room, its top at y, from x0 to x1: a warm wooden top and front.
-function fardaTable(y, x0 = -200, x1 = W + 200) {
+function fardaTable(y, x0 = -1200, x1 = W + 1200) {
   const S = SETS.farda;
   boilSeed('farda table ' + y);
-  paint(rectPts(x0, y, x1 - x0, H - y + 300), { wash: S.tableDk, ink: PAL.ink, sw: .9 });
+  paint(rectPts(x0, y, x1 - x0, H - y + 1300), { wash: S.tableDk, ink: PAL.ink, sw: .9 });
   paint(rrPts(x0, y - 18, x1 - x0, 40, 12), { wash: S.table, ink: PAL.ink, sw: .9 });
 }
 
@@ -187,10 +187,10 @@ function fardaTable(y, x0 = -200, x1 = W + 200) {
 function dawnSky(dawn, key = 'dawn') {
   boilSeed('sky ' + key);
   const cols = [[PAL.deep, '#3F72D6'], ['#262A6B', '#8FB4F5'], ['#3B2F7A', '#F5C58E']].map(([n, d]) => mixCol(n, d, dawn));
-  paint(rectPts(-80, -80, W + 160, H + 160), { wash: cols[0], ink: null });
+  paint(rectPts(-1000, -1000, W + 2000, H + 2000), { wash: cols[0], ink: null });
   [[380, 1], [650, 2]].forEach(([y, i]) => {
-    const P = [[-80, H + 80]]; for (let k = 0; k <= 12; k++) P.push([-80 + k * (W + 160) / 12, y + 22 * Math.sin(k * 1.3 + i) + jit(6)]);
-    P.push([W + 80, H + 80]); paint(P, { wash: cols[i], ink: null });
+    const P = [[-1000, H + 1000]]; for (let k = 0; k <= 12; k++) P.push([-1000 + k * (W + 2000) / 12, y + 22 * Math.sin(k * 1.3 + i) + jit(6)]);
+    P.push([W + 1000, H + 1000]); paint(P, { wash: cols[i], ink: null });
   });
 }
 
@@ -198,7 +198,7 @@ function dawnSky(dawn, key = 'dawn') {
 // Returns the screen rectangle so a scene can draw its own content: { x, y, w, h }. bg: the room around it.
 function screenFrame(o = {}) {
   boilSeed('insert bg');
-  paint(rectPts(-100, -100, W + 200, H + 200), { wash: o.bg || '#1A1F33', ink: null });
+  paint(rectPts(-1500, -1500, W + 3000, H + 3000), { wash: o.bg || '#1A1F33', ink: null });
   const x = 170, y = 80, w = W - 340, h = H - 200;
   boilSeed('insert bezel');
   paint(rrPts(x - 26, y - 26, w + 52, h + 52, 30), { wash: '#2B2F3E', ink: PAL.ink, sw: 1.3 });
@@ -241,7 +241,8 @@ const sparkleAt = (x, y, r, k, col = PAL.cream) => { if (k > 0 && k < 1) paint(s
 // A Persian title that writes itself in from the right (screen space).
 function storyTitle(txt, lt, t0, t1, fadeAt = 99, o = {}) {
   const a = 1 - seg(lt, fadeAt, fadeAt + .35); if (lt < t0 || a <= 0) return;
-  letter(txt, o.x ?? 1840, o.y ?? 120, o.size ?? 90, o.col ?? PAL.cream, { align: o.align ?? 'right', reveal: easeOut(seg(lt, t0, t1)), alpha: a, screen: true, stroke: o.stroke, weight: o.weight });
+  // default: the top right corner of whatever is on screen (the frame, or a reel's window)
+  letter(txt, o.x ?? VIEW.x + VIEW.w - 80 * VIEW.h / H, o.y ?? VIEW.y + 120 * VIEW.h / H, o.size ?? 90, o.col ?? PAL.cream, { align: o.align ?? 'right', reveal: easeOut(seg(lt, t0, t1)), alpha: a, screen: true, stroke: o.stroke, weight: o.weight });
 }
 // Transitions in screen space: fade from/to a colour (k 0..1 = cover), after flushing any lettering under it.
 function cover(k, col = PAL.deep) { if (k > .01) { flushLetters(); flash(clamp(k), col); } }

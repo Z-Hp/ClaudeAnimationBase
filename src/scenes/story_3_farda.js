@@ -207,8 +207,8 @@
   // ---------- H4–H5: an exam without fear, and the puzzle complete (126–138) ----------
   function shotExam(t, lt, dur) {
     if (lt >= 7 && lt < 9) {   // the paper, close: right, with the star
-      boilSeed('exam desk'); paint(rectPts(-100, -100, W + 200, H + 200), { wash: SETS.farda.table, ink: null });
-      for (let i = 0; i < 8; i++) inkLine([[-50, 120 + i * 130], [W + 50, 130 + i * 130]], .6, SETS.farda.tableDk, 'inkfine', .3);
+      boilSeed('exam desk'); paint(rectPts(-1500, -1500, W + 3000, H + 3000), { wash: SETS.farda.table, ink: null });
+      for (let i = -6; i < 15; i++) inkLine([[-50, 120 + i * 130], [W + 50, 130 + i * 130]], .6, SETS.farda.tableDk, 'inkfine', .3);
       examPaper(960, 560, 820, { mark: lt > 7.5 ? 'good' : null });
       return;
     }
@@ -243,7 +243,7 @@
     const s = 190, CX = 960, CY = 560, BAR = 4 * BEAT;
     camBegin(960, 540, 1 + .012 * lt);
     boilSeed('mind space');
-    paint(rectPts(-300, -300, W + 600, H + 600), { wash: PAL.deep, ink: null });
+    paint(rectPts(-1300, -1300, W + 2600, H + 2600), { wash: PAL.deep, ink: null });
     glow(CX, CY, 700, PAL.cosmos, .6); glow(CX, CY, 380, '#7FE6F5', .25 + .2 * seg(lt, 0, dur));
     for (let i = 0; i < 40; i++) { boilSeed('mind star ' + i); paint(starPts(hash(i) * W, hash(i + 70) * H, 2 + 3 * hash(i + 3), .35, 4), { wash: PAL.cream, washOp: 90 + 120 * hash(i + 9), ink: null }); }
     const KN = [[0, 1, -1, 0], [0, 0, 1, -1], [0, -1, 1, 1], [1, -1, 0, 0], [-1, 0, 0, 1], [1, 1, 0, -1]], ORDER = [0, 4, 2, 3];

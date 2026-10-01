@@ -18,6 +18,7 @@
 //   Music: --audio=assets/song.mp3 (or PROJECT.audio; --audio=none for silence) is muxed into --clip and --encode. Other flags: --fps=24,
 //   --chrome=<path to Chrome/Chromium>, --offline (skip Google Fonts; use the local fonts only),
 //   --lite (flat washes instead of watercolour fills: fast previews without a GPU; see LITE in core.js),
+//   --reel (the 1080×1920 Instagram/Reels version: frames in out/frames_reel; use it on --frames and --encode alike),
 //   --verbose (show the page's WebGL and network warnings too), --style=<name> (a painting style from src/styles.js).
 import puppeteer from 'puppeteer-core';
 import { spawn } from 'node:child_process';
@@ -38,7 +39,7 @@ function playwrightChromes() {
     .map(n => `${dir}/${n}/chrome-linux64/chrome`);
 }
 const CHROME = CHROMES.find(p => p && existsSync(p));
-const fps = +(args.fps || 24), FRAMES_DIR = 'out/frames';
+const fps = +(args.fps || 24), FRAMES_DIR = args.reel ? 'out/frames_reel' : 'out/frames';   // --reel: the 9:16 Instagram version, kept apart
 const run = (cmd, a) => new Promise((ok, bad) => { const p = spawn(cmd, a, { stdio: 'inherit' }); p.on('close', c => c ? bad(new Error(cmd + ' exited ' + c)) : ok()); });
 const times = s => String(s).split(',').map(Number);
 const span = s => String(s).split(':').map(Number);
@@ -52,7 +53,7 @@ if (args.encode) {
   // size: the default is near-lossless (big); --small keeps 1080p at a lower quality (about a third of the size);
   // --tiny is 720p for messengers and social media (about a tenth). --crf=N (17 best … 30 smallest) and --height=N
   // set them by hand.
-  const Q = args.tiny ? { crf: 27, height: 720, ab: '128k' } : args.small ? { crf: 24, ab: '160k' } : { crf: 17, ab: '192k' };
+  const Q = args.tiny ? { crf: 27, height: args.reel ? 1280 : 720, ab: '128k' } : args.small ? { crf: 24, ab: '160k' } : { crf: 17, ab: '192k' };
   const crf = String(args.crf ?? Q.crf), height = args.height ?? Q.height;
   console.log(`encoding ${n} frames → ${out}${audio ? ' with ' + audio : ''} (crf ${crf}${height ? ', ' + height + 'p' : ''})`);
   await run('ffmpeg', ['-y', '-loglevel', 'error', '-stats', '-framerate', String(fps), '-i', `${FRAMES_DIR}/f%05d.jpg`,
@@ -95,7 +96,7 @@ async function openPage(tag = '') {
     await page.setRequestInterception(true);
     page.on('request', r => /fonts\.(googleapis|gstatic)\.com/.test(r.url()) ? r.abort() : r.continue());
   }
-  await page.goto(pathToFileURL(resolve('studio.html')).href + '?render' + (args.lite ? '&lite' : '') + (args.style ? '&style=' + args.style : ''), { waitUntil: 'networkidle0', timeout: 180000 });   // the first frame paints during load; slow styles need time
+  await page.goto(pathToFileURL(resolve('studio.html')).href + '?render' + (args.lite ? '&lite' : '') + (args.style ? '&style=' + args.style : '') + (args.reel ? '&reel' : ''), { waitUntil: 'networkidle0', timeout: 180000 });   // the first frame paints during load; slow styles need time
   await page.waitForFunction('window.ready === true', { timeout: 60000 });
   if (args.loop) {
     const ok = await page.evaluate(name => { if (!LOOPS[name]) return false; window.LOOP = LOOPS[name]; return true; }, args.loop);

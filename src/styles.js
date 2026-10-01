@@ -89,6 +89,7 @@ function nativeLine(P, sw, col, br, curv) { STY.line(curv > 0 && P.length > 2 ? 
 let CHALK_C = null;
 function chalkDust() {
   if (CHALK_C) return CHALK_C;
+  const W = OW, H = OH;
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const c = cv.getContext('2d'), rnd = lcg(21);
   const id = c.createImageData(W, H), d = id.data;
   for (let i = 0; i < d.length; i += 4) { const skip = rnd() < .14, v = skip ? 170 + rnd() * 50 : 255; d[i] = v - 12; d[i + 1] = v; d[i + 2] = v - 8; d[i + 3] = 255; }

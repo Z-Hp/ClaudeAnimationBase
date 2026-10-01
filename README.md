@@ -46,6 +46,8 @@ node render.mjs --soft-gl --lite --offline --frames      # فریم‌ها در 
 node render.mjs --encode --out=out/video.mp4             # ساختن MP4 از فریم‌ها
 node render.mjs --encode --small --out=out/video_small.mp4   # کم‌حجم (۱۰۸۰p، حدود یک‌سوم)
 node render.mjs --encode --tiny --out=out/video_tiny.mp4     # خیلی کم‌حجم (۷۲۰p، برای تلگرام و اینستاگرام)
+node render.mjs --frames --reel --workers=4                # نسخه‌ی عمودی ۹:۱۶ برای ریلز (فریم‌ها در out/frames_reel)
+node render.mjs --encode --reel --small --out=out/reel.mp4  # ساختن ریلز ۱۰۸۰×۱۹۲۰
 ```
 
 در `--soft-gl` رندر با یک worker انجام می‌شود (چند worker در WebGL نرم‌افزاری فریم سیاه می‌دهند) و حدود ۸ ثانیه برای هر فریم طول می‌کشد، یعنی ویدیوی ۲۴ ثانیه‌ای حدود ۷۵ دقیقه. نسخه‌ی نهایی با کیفیت کامل را روی سیستمی با کارت گرافیک و بدون `--lite` رندر کن.

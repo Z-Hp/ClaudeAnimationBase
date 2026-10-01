@@ -44,7 +44,7 @@
     boilSeed('path sun'); glow(300, sunY, 360 + 200 * rise, '#FFD27A', .9); paint(ellPts(300, sunY, 120, 120, 30), { wash: '#FFE3A3', ink: null });
     boilSeed('path hills');
     paint(ellPts(900, 1180, 1500, 380, 40, 2), { wash: mixCol('#3A3F8F', '#4E78C9', k), ink: PAL.ink, sw: .9 });
-    paint(rectPts(-600, G, 3400, 400, 2), { wash: mixCol('#2B2E6E', '#2E6C9E', k), ink: null });
+    paint(rectPts(-1600, G, 5400, 1400, 2), { wash: mixCol('#2B2E6E', '#2E6C9E', k), ink: null });
     inkLine([[-200, G], [960, G - 3], [2800, G + 1]], 1, PAL.ink, 'ink', .5);
     // the path lights up behind them, and each station as they reach it
     boilSeed('path line'); inkLine([[2700, G + 22], [Math.max(lead, 200), G + 22]], 2.2, PAL.cyan, 'ink', 0);
@@ -54,7 +54,7 @@
       paint(ellPts(nx, G + 22, 12, 12, 12), { wash: mixCol('#7C86B8', PAL.cyan, a), ink: PAL.ink, sw: .6 });   // waiting, then lit
       if (a <= 0) return;
       glow(nx, G + 22, 90 * a, '#7FE6F5', .9); paint(ellPts(nx, G + 22, 20 * backOut(a), 20 * backOut(a), 14), { wash: PAL.cyan, ink: PAL.ink, sw: .7 });
-      letter(fa, nx, G - 350 - i * 80, 44, PAL.cream, { reveal: a, weight: 700, stroke: PAL.deep });
+      letter(fa, REEL ? nx + 240 : nx, G - 350 - i * 80, 44, PAL.cream, { reveal: a, weight: 700, stroke: PAL.deep });
     });
     [['kian', 600], ['mahsa', 450], ['nima', 300], ['sara', 150], ['arman', 0]].forEach(([who, dx], i) => {
       const x = lead + dx, stopped = lt > stopAt, w = speed * Math.min(lt, stopAt) / (4 * 16) + i * .2;
@@ -73,7 +73,7 @@
     const DT = 720, view = lt < 1.4 ? 'back' : lt < 1.55 ? 'side' : lt < 1.7 ? 'q' : 'front';
     camBegin(960, 540, 1.05 + .01 * lt);
     boilSeed('morning wall');
-    paint(rectPts(-300, -300, W + 600, H + 600), { wash: SETS.morning.wall, ink: null });
+    paint(rectPts(-1300, -1300, W + 2600, H + 2600), { wash: SETS.morning.wall, ink: null });
     glow(1500, 250, 700, '#FFE3A3', .6);
     desk(DT, 'morning');
     laptop(1180, DT, 620, { screen: 'project', key: 'morning' });
@@ -93,11 +93,11 @@
     dawnSky(1, 'end');
     boilSeed('end sun'); glow(960, 760, 460, '#FFD27A', .8); paint(ellPts(960, 780, 150, 150, 30), { wash: '#FFE3A3', ink: null });
     boilSeed('end hill'); paint(ellPts(960, 1310, 1500, 420, 40, 2), { wash: '#2E6C9E', ink: PAL.ink, sw: 1 });
-    [['kian', 450], ['sara', 640], ['arman', 830], ['mentor', 1060], ['mahsa', 1270], ['nima', 1460]].forEach(([who, x], i) => {
+    [['kian', 450], ['sara', 640], ['arman', 830], ['mentor', 1060], ['mahsa', 1270], ['nima', 1460]].map(([who, x]) => [who, REEL ? 955 + (x - 955) * .62 : x]).forEach(([who, x], i) => {   // reels: closer together
       const wv = Math.max(0, Math.sin(lt * 1.3 + i * 1.7));
       person(x, 950, 13, { who, ...expr('happy', { seed: i }), aR: .2 + 2.2 * wv + .3 * Math.sin(lt * 10) * wv, bR: -.2 * wv, boilKey: 'end ' + who });
     });
-    buddy(830, 705, 20, { mood: 'heart', key: 'yara' });
+    buddy(REEL ? 1250 : 830, REEL ? 690 : 705, 20, { mood: 'heart', key: 'yara' });
     storyTitle('فردا', lt, .8, 1.8, 99, { x: 960, y: 250, size: 230, align: 'center', col: PAL.brandDk, stroke: PAL.cream, weight: 900 });
     storyTitle('از امروز به فردا بیایید', lt, 2.2, 3.2, 99, { x: 960, y: 420, size: 76, align: 'center', col: PAL.deep, stroke: PAL.cream, weight: 700 });
     storyTitle('حضوری در بابلسر · آنلاین', lt, 3.6, 4.3, 99, { x: 960, y: 515, size: 44, align: 'center', col: PAL.deep, stroke: PAL.cream, weight: 600 });

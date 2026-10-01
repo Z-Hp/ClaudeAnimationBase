@@ -53,7 +53,7 @@
     const DT = 720;
     camBegin(960, 540, kf(lt, [[0, 1.04], [dur, 1.08]]));
     boilSeed('ask wall');
-    paint(rectPts(-300, -300, W + 600, H + 600), { wash: SETS.night.wall, ink: null });
+    paint(rectPts(-1300, -1300, W + 2600, H + 2600), { wash: SETS.night.wall, ink: null });
     glow(1180, 520, 520, SETS.night.light, .35);
     desk(DT, 'night');
     laptop(1180, DT, 620, { screen: 'video', key: 'ask' });
@@ -99,7 +99,7 @@
     const a = lt - 2.5;
     camBegin(960 - 10 * a, 540, 1.02 + .01 * a);
     boilSeed('bored wall');
-    paint(rectPts(-300, -300, W + 600, H + 600), { wash: SETS.grey.wall, ink: null });
+    paint(rectPts(-1300, -1300, W + 2600, H + 2600), { wash: SETS.grey.wall, ink: null });
     paint(rectPts(1350, 120, 380, 420), { wash: '#C8CCD6', ink: '#7D818E', sw: 1.4 });   // the window he stares at
     for (let i = 0; i < 9; i++) { boilSeed('head ' + i); const hx = 60 + i * 230 + (hash(i) - .5) * 60, hy = 820 + (i % 2) * 90; paint(ellPts(hx, hy, 95, 105, 18), { wash: mixCol('#6E7382', SETS.grey.wall, .3 * (i % 2)), ink: null }); }
     const mood = acts(a, [[0, 'bored'], [1.8, 'uninterested', { lookX: 1 }]]);

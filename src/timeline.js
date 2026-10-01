@@ -70,10 +70,11 @@ function placeholder(t) {
 function brushWipe(p, cols = [PAL.clayDk, PAL.clay]) {
   if (p <= 0 || p >= 1) return;
   flushLetters();   // lettering queued so far goes under the wipe, not on top of it
-  const [c1, c2] = cols, n = 5, bh = (H + 420) / n + 40;
-  push(); translate(W / 2, H / 2); rotate(-.1); translate(-W / 2, -H / 2);
+  // it covers the visible screen: the whole 1920×1080 frame, or a reel's 9:16 window of it
+  const W = VIEW.w, H = VIEW.h, [c1, c2] = cols, n = REEL ? 7 : 5, bh = (H + 420) / n + 40;
+  push(); translate(VIEW.x + W / 2, VIEW.y + H / 2); rotate(-.1); translate(-W / 2, -H / 2);
   for (let i = 0; i < n; i++) {
-    const y0 = -230 + i * (H + 420) / n, d = [0, .14, .06, .18, .1][i];
+    const y0 = -230 + i * (H + 420) / n, d = [0, .14, .06, .18, .1, .04, .16][i];
     const q = p < .5 ? easeOut(clamp((p * 2 - d) / (1 - d))) : ease(clamp(((p - .5) * 2 - d) / (1 - d)));
     const x0 = p < .5 ? -300 : lerp(-300, W + 400, q), x1 = p < .5 ? lerp(-300, W + 400, q) : W + 400;
     if (x1 - x0 < 30) continue;

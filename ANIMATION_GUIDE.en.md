@@ -417,6 +417,10 @@ clawd(x, y, 24, { ...feel('proud', t), aR: 1.2, armR: (u, sw) => paint(starPts(u
 
 Every shape and line goes through `paint()` and `inkLine()`, so the style changes in one place: `style` in [src/config.js](src/config.js) (or `studio.html?style=...` and `render.mjs --style=...` to try one). The styles live in [src/styles.js](src/styles.js): `watercolor` (default), `gouache`, `pencil`, `flat`, `cartoon`, `cutout`, `chalk`. The first three paint with p5.brush; the other four draw plain p5 shapes and are fast even without a GPU. For `flat` and `cartoon`, this guide's rules about a handmade medium become "clean shapes and solid colour"; the rest (acting, timing, transitions) stay as they are.
 
+## Vertical version (Reels)
+
+`render.mjs --reel` (or `studio.html?reel`) outputs 1080×1920. The scenes still draw on the 1920×1080 design screen; `REEL_VIEW(t)` shows a 9:16 window of it (`{ cx, cy, h }`, a larger h pulls the camera back). [src/scenes/story_reel.js](src/scenes/story_reel.js) is the example: a few keys per shot, with the window easing between them so the characters stay in frame. Paint full-screen backgrounds far past the frame so a pulled-back window never reaches their edge. `flash`, `iris`, `brushWipe` and `storyTitle` follow the window on their own. To check framing quickly, `--style=flat` is fast even without a GPU.
+
 ## Music (optional)
 
 The kit doesn't need music, but it's built for it:
