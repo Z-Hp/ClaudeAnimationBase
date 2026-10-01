@@ -91,11 +91,12 @@
       const wv = Math.max(0, Math.sin(lt * 1.3 + i * 1.7));
       person(x, 950, 13, { who, ...expr('happy', { seed: i }), aR: .2 + 2.2 * wv + .3 * Math.sin(lt * 10) * wv, bR: -.2 * wv, boilKey: 'end ' + who });
     });
-    buddy(830, 690, 20, { mood: 'heart', key: 'yara' });
+    buddy(830, 705, 20, { mood: 'heart', key: 'yara' });
     storyTitle('فردا', lt, .8, 1.8, 99, { x: 960, y: 250, size: 230, align: 'center', col: PAL.brandDk, stroke: PAL.cream, weight: 900 });
     storyTitle('از امروز به فردا بیایید', lt, 2.2, 3.2, 99, { x: 960, y: 420, size: 76, align: 'center', col: PAL.deep, stroke: PAL.cream, weight: 700 });
     storyTitle('حضوری در بابلسر · آنلاین', lt, 3.6, 4.3, 99, { x: 960, y: 515, size: 44, align: 'center', col: PAL.deep, stroke: PAL.cream, weight: 600 });
     if (lt > 4.2) letter('aifardainstitute.ir', 960, 585, 40, PAL.brandDk, { align: 'center', reveal: seg(lt, 4.2, 4.9), font: '700 40px Vazirmatn, sans-serif', stroke: PAL.cream, screen: true });
+    if (lt > 4.7) letter('۰۹۰۱ ۹۷۱ ۲۱۰۰', 960, 640, 40, PAL.brandDk, { align: 'center', dir: 'ltr', reveal: seg(lt, 4.7, 5.4), font: '700 40px Vazirmatn, sans-serif', stroke: PAL.cream, screen: true });   // the site's support line
     if (lt < .3) brushWipe(.5 + lt / .6, BRAND);
     cover(seg(lt, dur - .8, dur), PAL.deep);
   }

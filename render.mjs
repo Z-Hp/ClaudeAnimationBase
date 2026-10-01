@@ -10,6 +10,7 @@
 //   Make the video:
 //     node render.mjs --clip [--range=0:4] --out=out/video.mp4                               straight to MP4 (one worker)
 //     node render.mjs --frames [--range=0:8] --workers=4                                     JPEG frames → out/frames (parallel, resumable)
+//         (add --redo to render a range again over frames already there, after changing those shots)
 //     node render.mjs --encode --out=out/video.mp4                                           out/frames → MP4
 //         (add --small for about a third of the size, --tiny for 720p at about a tenth; or --crf=N, --height=N)
 //   Standalone loops (LOOPS in the page): add --loop=<name> to any of the above (times are then loop times), or
@@ -150,7 +151,7 @@ if (args.sheet || args.strip) {
   const [a, b] = args.range ? span(args.range) : [0, len], workers = workerCount(4);
   mkdirSync(FRAMES_DIR, { recursive: true });
   const first = Math.round(a * fps), last = Math.min(Math.ceil(len * fps) - 1, Math.round(b * fps) - 1);
-  const todo = []; for (let i = first; i <= last; i++) { const f = `${FRAMES_DIR}/f${String(i).padStart(5, '0')}.jpg`; if (!existsSync(f) || statSync(f).size < 1000) todo.push(i); }
+  const todo = []; for (let i = first; i <= last; i++) { const f = `${FRAMES_DIR}/f${String(i).padStart(5, '0')}.jpg`; if (args.redo || !existsSync(f) || statSync(f).size < 1000) todo.push(i); }   // --redo: render the range again even where frames exist
   console.log(`${todo.length} frames to render (${last - first + 1 - todo.length} already done), ${workers} workers`);
   let next = 0, done = 0; const start = Date.now();
   await Promise.all(Array.from({ length: workers }, async (_, w) => {

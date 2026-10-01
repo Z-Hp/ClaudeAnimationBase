@@ -239,7 +239,7 @@ function drawLetters(c) {
   for (const L of LETTERS) {
     const k = L.pop != null ? backOut(L.pop) : 1; if (k <= .01) continue;
     c.save(); c.translate(L.x, L.y); c.rotate(L.rot || 0); c.scale(k, k); c.globalAlpha = L.alpha ?? 1;
-    const rtl = RTL.test(L.txt);
+    const rtl = L.dir ? L.dir === 'rtl' : RTL.test(L.txt);   // dir: 'ltr' for Persian digits that must read left to right (a phone number)
     c.font = L.font || (rtl ? `${L.weight || 800} ${L.size}px Vazirmatn, Tahoma, sans-serif` : `${L.size}px "Permanent Marker", "Comic Sans MS", cursive`);
     c.direction = rtl ? 'rtl' : 'ltr'; c.textAlign = L.align || 'center'; c.textBaseline = 'middle';
     if (L.reveal != null && L.reveal < 1) {   // write it in from the reading start: the right for Persian, the left otherwise
