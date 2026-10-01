@@ -10,12 +10,18 @@
     camBegin(1150, 700, 1.45 + .01 * lt);
     fardaRoom(t, { winX: 1450, posterX: 300, plantX: 620 });
     const walk = stroll(lt, 2.2, 3.6, 780, 1170, u), moving = lt > 2.2 && lt < 3.6;
+    // Mahsa's hand goes all the way up (clear of the table) and waves; when Arman arrives, both reach out and their
+    // hands meet halfway (angles solved for the gap between his right shoulder and her left: they touch at ~1294, 789)
+    const up = ease(seg(lt, .5, .9)), hold = ease(seg(lt, 3.55, 4)) * (1 - ease(seg(lt, 5.6, 6.1))), down = ease(seg(lt, 5.6, 6.1));
     const aMood = acts(lt, [[0, 'neutral', { lookX: .3 }], [1.5, 'curious', { lookX: .9 }], [3.7, 'happy', { lookX: .8 }], [6.2, 'proud', { lookX: .7 }]]);
     student(walk.x, 985, u, { ...aMood, mouth: lt > 3.8 && lt < 5.4 ? talk(lt, 3.8, 5.4) : aMood.mouth, view: moving ? 'side' : 'front', walk: moving ? walk.walk : null,
-      aR: lt > 3.9 && lt < 5.4 ? 1.1 + .08 * Math.sin(lt * 5) : .2, bR: lt > 3.9 && lt < 5.4 ? .4 : .3, aL: .2, seed: 61 });
-    const hand = ease(seg(lt, .6, 1)) * (1 - ease(seg(lt, 3.8, 4.3)));
-    person(1420, seatAt('mahsa', TY, u), u, { who: 'mahsa', ...acts(lt, [[0, 'confused', { lookX: .2 }], [3.8, 'thinking', { lookX: -.6, lookY: -.3 }], [5.4, 'idea', { lookX: -.5 }], [6, 'happy', { lookX: -.6 }]]),
-      aL: lerp(.3, .95, hand), bL: lerp(1.8, .7, hand), aR: .3, bR: 1.8, seed: 62 });
+      aR: lerp(.2, .89, hold), bR: lerp(.3, -1.62, hold), aL: .2, seed: 61 });
+    const raised = [2.75 + .1 * Math.sin(t * 7) * up, .15];   // straight up, waving a little
+    const mA = lt < 3.55 ? lerp(.3, raised[0], up) : lt < 5.6 ? lerp(raised[0], .71, hold) : lerp(.71, .3, down);
+    const mB = lt < 3.55 ? lerp(1.8, raised[1], up) : lt < 5.6 ? lerp(raised[1], -1.62, hold) : lerp(-1.62, 1.8, down);
+    person(1420, seatAt('mahsa', TY, u), u, { who: 'mahsa', ...acts(lt, [[0, 'confused', { lookX: -.2, lookY: -.3 }], [3.8, 'thinking', { lookX: -.6, lookY: -.3 }], [5.4, 'idea', { lookX: -.5 }], [6, 'happy', { lookX: -.6 }]]),
+      aL: mA, bL: mB, aR: .3, bR: 1.8, seed: 62 });
+    if (lt > 3.95) sparkleAt(1294, 760, 50, seg(lt, 3.95, 4.5));
     person(1650, seatAt('kian', TY, u), u, { who: 'kian', ...acts(lt, [[0, 'focused', { lookY: .4 }], [5.6, 'happy', { lookX: -.8 }]]), aL: .3, bL: 1.8, aR: .3, bR: 1.8, seed: 63 });
     if (lt > 4) holo(1300, 560, 170 * seg(lt, 4, 4.4), 115 * seg(lt, 4, 4.4));
     fardaTable(TY);
