@@ -1,12 +1,23 @@
 // core.js: constants, helpers, paper, paint wrapper, compositing and render hooks.
 // Length and rhythm come from PROJECT in config.js.
 const W = 1920, H = 1080;
+// Reels (studio.html?reel, render.mjs --reel, or format: 'reel' in config.js): the scenes still draw on the 1920×1080
+// design screen; the output is a 1080×1920 portrait canvas that shows a 9:16 window of it. REEL_VIEW(t) (set by the
+// scene files, see story_reel.js) says where that window is: { cx, cy, h } in design-screen pixels, h its height.
+const REEL = (typeof location !== 'undefined' && /[?&]reel\b/.test(location.search)) || PROJECT.format === 'reel';
+const OW = REEL ? 1080 : W, OH = REEL ? 1920 : H;
+let REEL_VIEW = () => ({ cx: W / 2, cy: H / 2, h: H }), VIEW = { x: 0, y: 0, w: W, h: H, s: 1 };
+const setView = t => { if (!REEL) return; const v = REEL_VIEW(t), w = v.h * OW / OH; VIEW = { x: v.cx - w / 2, y: v.cy - v.h / 2, w, h: v.h, s: OH / v.h }; };
+// the part of the design screen that ends up in the output, with a margin: for full-frame washes and transitions
+const screenRect = (m = 60) => rectPts(VIEW.x - m, VIEW.y - m, VIEW.w + 2 * m, VIEW.h + 2 * m);
 const BPM = PROJECT.bpm, BEAT = 60 / BPM, OFF = PROJECT.offset || 0, BOIL = 12, DUR = PROJECT.duration;
 const TAU = Math.PI * 2;
 const PAL = {
   paper: '#F3EBDC', ink: '#2B2233', clay: '#D97757', clayDk: '#A84D33', clayLt: '#F2A283',
   night: '#1F2550', indigo: '#2F3C7A', rose: '#E27A92', ochre: '#E8AA38', sap: '#6E9F58',
-  teal: '#3A9C98', violet: '#7B5CA8', cream: '#FFF5E2', sky: '#8EC3E6'
+  teal: '#3A9C98', violet: '#7B5CA8', cream: '#FFF5E2', sky: '#8EC3E6',
+  // Farda Institute's cosmic brand (the website's blue, cyan, indigo and purple), softened for paint
+  brand: '#2F66E0', brandDk: '#1E3A8A', brandLt: '#8FB4F5', cyan: '#3CCFE6', cosmos: '#4A45C9', nebula: '#A45AE8', deep: '#121833'
 };
 
 const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
@@ -97,7 +108,7 @@ function toScreen(x, y, cam = CAM) {
 }
 
 // ---------- full-frame effects (call outside a camera, in screen space) ----------
-function flash(k, col = '#FFFDF6') { if (k > .01) paint(rectPts(-60, -60, W + 120, H + 120), { wash: col, washOp: 255 * clamp(k), ink: null }); }
+function flash(k, col = '#FFFDF6') { if (k > .01) paint(screenRect(), { wash: col, washOp: 255 * clamp(k), ink: null }); }
 // Light: glow(x, y, r, col, a) ADDS a soft halo of light for anything that shines (stars, lamps, fireflies, magic).
 // p5.brush mixes every colour like pigment, so yellow painted over blue turns green and light can't be painted; this
 // is the one non-paint mark in the kit. It lands on what's painted so far, under anything painted after it, follows
@@ -124,7 +135,7 @@ function irisShape(pts, col = PAL.ink, far = 4000) {
     paint([a2, b2, out(b2), out(a2)], { wash: col, washOp: 255, ink: null });
   }
 }
-function iris(cx, cy, r, col = PAL.ink) { if (r < 4) paint(rectPts(-60, -60, W + 120, H + 120), { wash: col, ink: null }); else irisShape(ellPts(cx, cy, r, r, 40), col); }
+function iris(cx, cy, r, col = PAL.ink) { flushLetters(); if (r < 4) paint(screenRect(), { wash: col, ink: null }); else irisShape(ellPts(cx, cy, r, r, 40), col); }
 
 let T = 0, paperG = null, grainC = null, letG = null, glowTex = null, outC = null, outX = null;
 let LETTERS = [];
@@ -183,7 +194,21 @@ function centred(pts, draw) {
   push(); translate(cx, cy); draw(pts.map(([x, y]) => [x - cx, y - cy])); pop();
 }
 function paint(pts, o = {}) { centred(pts, (P) => paintAt(P, o)); }
+// Lite mode (studio.html?lite, or render.mjs --lite): watercolour fills are by far the slowest thing to paint without a
+// GPU (about a minute a frame in software WebGL), so lite paints each fill as a flat, see-through wash instead. It's
+// for previews and GPU-less machines; render the final video without it.
+const LITE = typeof location !== 'undefined' && /[?&]lite\b/.test(location.search);
+// The painting style (src/styles.js): studio.html?style=flat (render.mjs --style=flat), else PROJECT.style, else watercolor.
+const STYLE = (typeof location !== 'undefined' && (location.search.match(/[?&]style=(\w+)/) || [])[1]) || PROJECT.style || 'watercolor';
+function liteFill(o) {
+  if (!o.fill) return o;
+  const op = (o.fillOp ?? 170) * .55;
+  return o.wash ? { ...o, fill: null } : { ...o, fill: null, wash: o.fill, washOp: op };
+}
 function paintAt(pts, o) {
+  if (STY.native) return nativePaint(pts, o);
+  if (STY.adapt) o = STY.adapt(o);
+  if (LITE) o = liteFill(o);
   if (o.wash || o.fill || o.hatch) {
     if (o.wash) brush.wash(o.wash, o.washOp ?? 255); else brush.noWash();
     if (o.fill) { brush.fill(o.fill, o.fillOp ?? 170); brush.fillBleed(o.bleed ?? .1); brush.fillTexture(o.tex ?? .4, o.border ?? .35); } else brush.noFill();
@@ -199,13 +224,20 @@ function paintAt(pts, o) {
   }
 }
 function inkLine(pts, sw = 1, col = PAL.ink, br = 'ink', curv = .5) {
-  centred(pts, (P) => { brush.noFill(); brush.noWash(); brush.noHatch(); brush.set(br, col, sw); brush.spline(P, curv); });
+  centred(pts, (P) => {
+    if (STY.native) return nativeLine(P, sw, col, br, curv);
+    brush.noFill(); brush.noWash(); brush.noHatch(); brush.set(STY.lineBrush ? STY.lineBrush(br) : br, col, sw); brush.spline(P, curv);
+  });
 }
 
 // ---------- lettering (drawn on the 2D compositor, under the paper grain) ----------
-// Use sparingly: see "No text" in ANIMATION_GUIDE.md. Clawd's emotes are painted and never need these.
+// Use sparingly: see "Text" in ANIMATION_GUIDE.md. Clawd's emotes are painted and never need these.
+// Persian (or Arabic) text is detected and set right to left in Vazirmatn, with its letters joined by the browser.
+// reveal: 0..1 writes it in from its right edge (the way Persian is written); weight: the font weight (default 800).
+const RTL = /[\u0600-\u06FF]/;
 function letter(txt, x, y, size, color, o = {}) {
   if (CAM && !o.screen) { [x, y] = toScreen(x, y); size *= CAM.zoom; o = { ...o, rot: (o.rot || 0) + CAM.rot }; if (o.font) o.font = o.font.replace(/(\d+(\.\d+)?)px/, (m, v) => (v * CAM.zoom) + 'px'); }
+  if (REEL) { x = (x - VIEW.x) * VIEW.s; y = (y - VIEW.y) * VIEW.s; size *= VIEW.s; if (o.font) o = { ...o, font: o.font.replace(/(\d+(\.\d+)?)px/, (m, v) => (v * VIEW.s) + 'px') }; }   // design screen → reel output
   LETTERS.push({ txt, x, y, size, color, ...o });
 }
 // Comic sound effect: pops in at age 0, wobbles, fades by `life` seconds.
@@ -217,8 +249,14 @@ function drawLetters(c) {
   for (const L of LETTERS) {
     const k = L.pop != null ? backOut(L.pop) : 1; if (k <= .01) continue;
     c.save(); c.translate(L.x, L.y); c.rotate(L.rot || 0); c.scale(k, k); c.globalAlpha = L.alpha ?? 1;
-    c.font = L.font || `${L.size}px "Permanent Marker", "Comic Sans MS", cursive`;
-    c.textAlign = L.align || 'center'; c.textBaseline = 'middle';
+    const rtl = L.dir ? L.dir === 'rtl' : RTL.test(L.txt);   // dir: 'ltr' for Persian digits that must read left to right (a phone number)
+    c.font = L.font || (rtl ? `${L.weight || 800} ${L.size}px Vazirmatn, Tahoma, sans-serif` : `${L.size}px "Permanent Marker", "Comic Sans MS", cursive`);
+    c.direction = rtl ? 'rtl' : 'ltr'; c.textAlign = L.align || 'center'; c.textBaseline = 'middle';
+    if (L.reveal != null && L.reveal < 1) {   // write it in from the reading start: the right for Persian, the left otherwise
+      if (L.reveal <= 0) { c.restore(); continue; }
+      const w = c.measureText(L.txt).width + L.size, al = c.textAlign, x0 = al === 'center' ? -w / 2 : al === 'right' || al === (rtl ? 'start' : 'end') ? -w : 0;
+      c.beginPath(); rtl ? c.rect(x0 + w * (1 - L.reveal), -L.size * 2, w * L.reveal, L.size * 4) : c.rect(x0, -L.size * 2, w * L.reveal, L.size * 4); c.clip();
+    }
     if (L.stroke) { c.lineJoin = 'round'; c.lineWidth = L.size * .12; c.strokeStyle = L.stroke; c.strokeText(L.txt, 0, 0); }
     if (L.ink !== false) { c.fillStyle = PAL.ink; c.fillText(L.txt, L.size * .045, L.size * .055); }
     c.fillStyle = L.color; c.fillText(L.txt, 0, 0);
@@ -229,7 +267,8 @@ function drawLetters(c) {
 // p5.brush defers washes and strokes into a mask layer; a (tiny, off-screen) watercolor fill forces it to composite
 // now, so everything painted before this call really lands under whatever p5 draws next (letters, glow).
 function flushBrush() {
-  push(); resetMatrix(); translate(-W / 2, -H / 2);
+  if (STY.native) return;   // native styles draw straight onto the canvas, in order
+  push(); resetMatrix(); translate(-OW / 2, -OH / 2);
   brush.noStroke(); brush.noHatch(); brush.noWash(); brush.fill('#000000', 1); brush.fillBleed(0); brush.fillTexture(0, 0);
   brush.polygon([[-50, -50], [-40, -50], [-40, -40]]); brush.noFill(); pop();
 }
@@ -240,14 +279,15 @@ function flushLetters() {
   letG.clear(); drawLetters(letG.drawingContext); LETTERS = [];
   flushBrush();
   // Letters are already in screen space, so composite them with the base transform even inside camBegin().
-  push(); resetMatrix(); translate(-W / 2, -H / 2); image(letG, 0, 0); pop();
+  push(); resetMatrix(); translate(-OW / 2, -OH / 2); image(letG, 0, 0); pop();
 }
 
 // ---------- paper ----------
 function lcg(seed) { let s = seed; return () => (s = (s * 16807) % 2147483647) / 2147483647; }
 function makePaper() {
   const g = createGraphics(W, H); g.pixelDensity(1); const c = g.drawingContext, rnd = lcg(11);
-  c.fillStyle = PAL.paper; c.fillRect(0, 0, W, H);
+  c.fillStyle = STY.paper || PAL.paper; c.fillRect(0, 0, W, H);
+  if (STY.grain === false) return g;   // clean ground (flat, cartoon, chalk)
   for (let i = 0; i < 70; i++) { const x = rnd() * W, y = rnd() * H, r = 120 + rnd() * 380, gr = c.createRadialGradient(x, y, 0, x, y, r), a = .045 * rnd(); gr.addColorStop(0, `rgba(160,125,80,${a})`); gr.addColorStop(1, 'rgba(160,125,80,0)'); c.fillStyle = gr; c.fillRect(x - r, y - r, 2 * r, 2 * r); }
   c.lineWidth = 1;
   for (let i = 0; i < 1400; i++) { const x = rnd() * W, y = rnd() * H, l = 6 + rnd() * 26, a = rnd() * TAU; c.strokeStyle = `rgba(110,88,60,${.035 + rnd() * .06})`; c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + Math.cos(a + .6) * l * .5, y + Math.sin(a + .6) * l * .5, x + Math.cos(a) * l, y + Math.sin(a) * l); c.stroke(); }
@@ -255,6 +295,7 @@ function makePaper() {
 }
 // Static grain + vignette, multiplied over the painted frame so pigment sits "in" the paper.
 function makeGrain() {
+  const W = OW, H = OH;   // the output canvas (portrait for reels)
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const c = cv.getContext('2d'), rnd = lcg(5);
   const id = c.createImageData(W, H), d = id.data;
   for (let i = 0; i < d.length; i += 4) { const v = 255 - (rnd() < .55 ? rnd() * rnd() * 34 : 0); d[i] = v; d[i + 1] = v - 1; d[i + 2] = v - 3; d[i + 3] = 255; }
@@ -273,30 +314,33 @@ function defineBrushes() {
 
 // ---------- frame ----------
 async function setup() {
-  createCanvas(W, H, WEBGL); pixelDensity(1); noLoop();
+  createCanvas(OW, OH, WEBGL); pixelDensity(1); noLoop();
   brush.scaleBrushes(5); defineBrushes();
-  paperG = makePaper(); grainC = makeGrain(); glowTex = makeGlowTex(); letG = createGraphics(W, H); letG.pixelDensity(1);
-  outC = document.getElementById('out'); outX = outC.getContext('2d');
-  await document.fonts.load('100px "Permanent Marker"');
+  paperG = makePaper(); grainC = makeGrain(); glowTex = makeGlowTex(); letG = createGraphics(OW, OH); letG.pixelDensity(1);
+  outC = document.getElementById('out'); outC.width = OW; outC.height = OH; outX = outC.getContext('2d');
+  if (REEL) { outC.style.aspectRatio = '9 / 16'; outC.style.width = 'min(100%, 540px)'; }
+  await Promise.all(['100px "Permanent Marker"', '800 100px Vazirmatn', '400 100px Vazirmatn'].map(f => document.fonts.load(f).catch(() => {})));
   window.ready = true;
   if (!location.search.includes('render')) devUI();
 }
 function draw() {
   if (!window.ready) return;
   LETTERS = []; CAM = LAST_CAM = null;
-  push(); translate(-W / 2, -H / 2);
-  BOILN = Math.floor(T * BOIL); CLAWD_N = 0; boilSeed('frame'); noiseSeed(77);
-  image(paperG, 0, 0);
+  push(); translate(-OW / 2, -OH / 2);
+  setView(T); if (REEL) { scale(VIEW.s); translate(-VIEW.x, -VIEW.y); }   // reels: the 9:16 window of the design screen
+  BOILN = Math.floor(T * (STY.boil ?? BOIL)); CLAWD_N = 0; boilSeed('frame'); noiseSeed(77);
+  if (REEL) image(paperG, VIEW.x, VIEW.y, VIEW.w, VIEW.h); else image(paperG, 0, 0);
   drawWorld(T);
   pop();
 }
 function composite(t) {
   const c = outX;
   c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1;
-  c.drawImage(drawingContext.canvas, 0, 0, W, H);
+  c.drawImage(drawingContext.canvas, 0, 0, OW, OH);
   drawLetters(c);
-  c.globalCompositeOperation = 'multiply'; c.drawImage(grainC, 0, 0);
+  if (STY.grain !== false) { c.globalCompositeOperation = 'multiply'; c.drawImage(grainC, 0, 0); }
   c.globalCompositeOperation = 'source-over';
+  if (STY.post) STY.post(c);
 }
 window.renderAt = async (t, type = 'image/png', q = .92) => { T = t; await redraw(); composite(t); return outC.toDataURL(type, q); };
 // Contact sheet of several times, for visual checks: returns { url, ms[] }. crop = [x, y, w, h] fills each cell with just
@@ -305,7 +349,7 @@ window.renderAt = async (t, type = 'image/png', q = .92) => { T = t; await redra
 // a moving shot); x and y may be expressions evaluated in the page.
 window.renderSheet = async (times, cols = 3, w = 640, crop = null, at = null) => {
   if (at) at = at.map((v) => typeof v === 'string' ? (0, eval)(v) : v);
-  const [, , cw, ch] = at || crop || [0, 0, W, H], h = Math.round(w * ch / cw), rows = Math.ceil(times.length / cols), sc = document.createElement('canvas');
+  const [, , cw, ch] = at || crop || [0, 0, OW, OH], h = Math.round(w * ch / cw), rows = Math.ceil(times.length / cols), sc = document.createElement('canvas');
   sc.width = cols * w; sc.height = rows * h; const c = sc.getContext('2d'), ms = [];
   for (let i = 0; i < times.length; i++) {
     const t0 = performance.now(); T = times[i]; await redraw(); composite(times[i]); ms.push(Math.round(performance.now() - t0));
@@ -321,6 +365,15 @@ function devUI() {
   const s = document.getElementById('scrub'), lab = document.getElementById('tt'); s.max = window.LOOP ? window.LOOP.len : DUR;
   let busy = false, want = null;
   const go = async () => { if (busy) return; busy = true; while (want != null) { const t = want; want = null; const t0 = performance.now(); await window.renderAt(t); lab.textContent = `${t.toFixed(2)}s  ·  ${Math.round(performance.now() - t0)} ms/frame`; } busy = false; };
-  s.addEventListener('input', () => { want = +s.value; go(); });
+  s.addEventListener('input', () => { want = +s.value; go(); if (song && !song.paused) song.currentTime = want; });
   want = +(new URLSearchParams(location.search).get('t') || 0); s.value = want; go();
+  // ▶ (or space): plays PROJECT.audio and draws whatever frame the song has reached (frames drop when a frame is slow)
+  const btn = document.getElementById('play'), song = PROJECT.audio && !window.LOOP ? new Audio(PROJECT.audio) : null;
+  if (!btn) return;
+  if (!song) { btn.style.display = 'none'; return; }
+  const follow = () => { if (song.paused) return; want = s.value = song.currentTime; go(); requestAnimationFrame(follow); };
+  const toggle = () => { if (song.paused) { song.currentTime = +s.value; song.play(); btn.textContent = '❚❚'; follow(); } else { song.pause(); btn.textContent = '▶'; } };
+  btn.addEventListener('click', toggle);
+  addEventListener('keydown', e => { if (e.code === 'Space') { e.preventDefault(); toggle(); } });
+  song.addEventListener('ended', () => { btn.textContent = '▶'; });
 }

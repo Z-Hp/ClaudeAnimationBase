@@ -1,16 +1,19 @@
 {
-  "name": "claude-animation-base",
+  "name": "farda-animation-kit",
   "version": "1.0.0",
   "private": true,
   "license": "MIT",
-  "description": "Clawd, painted in p5.brush: a character kit and guide for making hand-painted Clawd animations",
+  "description": "Farda Institute animation kit: Fardi, the institute mascot, painted in p5.brush, with Persian lettering and a guide for making hand-painted videos",
   "scripts": {
     "sheet": "node render.mjs --sheet=0,1,2,3,4,5 --out=out/sheet.jpg",
-    "video": "node render.mjs --clip --out=out/video.mp4"
+    "video": "node render.mjs --clip --out=out/video.mp4",
+    "video:lite": "node render.mjs --soft-gl --lite --offline --frames && node render.mjs --encode --out=out/video.mp4",
+    "fardi": "node render.mjs --loop=fardi --sheet=1.3 --cols=1 --w=1920 --out=docs/fardi.jpg"
   },
   "dependencies": {
     "p5": "^2.3.3",
     "p5.brush": "^2.2.3",
-    "puppeteer-core": "^25.11.0"
+    "puppeteer-core": "^25.11.0",
+    "vazirmatn": "^33.0.3"
   }
 }
