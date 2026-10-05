@@ -46,6 +46,8 @@
 <script src="src/scenes/story_sync.js"></script>
 <!-- the 9:16 Reels framing, used only with ?reel / render.mjs --reel -->
 <script src="src/scenes/story_reel.js"></script>
+<!-- the covers: ?loop=thumbnail (YouTube) and ?reel&loop=cover (Shorts, Reels) -->
+<script src="src/thumbnail.js"></script>
 <script>
   // Open studio.html?loop=emotions (or views) to scrub a standalone loop instead of the video.
   const q = new URLSearchParams(location.search).get('loop'); if (q && LOOPS[q]) window.LOOP = LOOPS[q];
