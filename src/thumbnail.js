@@ -2,6 +2,7 @@
 // and Reels. Arman, amazed, raises his hand to Yara on a warm burst; the claim, big, on the brand's night blue.
 //   node render.mjs --loop=thumbnail --stills=0.5 --out=out/cover          1920×1080 (upload as 1280×720 JPG, under 2 MB)
 //   node render.mjs --reel --loop=cover --stills=0.5 --out=out/cover       1080×1920
+//   node render.mjs --reel --loop=reelCover --stills=0.5 --out=out/cover   1080×1920, the Instagram Reels cover
 // Kept clear: the bottom right of the thumbnail (YouTube puts the duration there), and the top and bottom 240 px of
 // the vertical cover (the profile grid shows only its middle 3:4).
 (() => {
@@ -66,7 +67,26 @@
     letter('آموزشگاه فردا', 960, -175, 40, PAL.cream, { align: 'center', weight: 800, ink: false, screen: true });
   };
   LOOPS.cover.len = 1;
-  // the cover's 9:16 window: x 510–1410, y −260–1340 on the design screen
+  // ---------- the Instagram Reels cover (9:16): the caption's hook over the crowded class ----------
+  // Grey room, forty grey backs, and one boy in colour who has turned round to us with his hand up. Everything that
+  // must read sits in the middle 3:4 (design y −60–1140), the part the profile grid shows.
+  LOOPS.reelCover = t => {
+    greyClass(t, { scrib: 1 });
+    greyCrowd(t, 4, 8);
+    boilSeed('reel cover dim');   // the words' night band, fading into the room
+    paint(rectPts(-1400, -1300, W + 2800, 1560), { wash: PAL.deep, washOp: 225, ink: null });
+    for (let i = 0; i < 8; i++) paint(rectPts(-1400, 260 + i * 25, W + 2800, 25), { wash: PAL.deep, washOp: 200 * (1 - (i + 1) / 9), ink: null });
+    student(935, 1400, 60, { ...expr('worried', { lookX: .05, lookY: -.05, emote: null, blush: .4 }), aL: .25, bL: .35, aR: 2.62, bR: .22, seed: 8, boilKey: 'reel cover arman' });
+    [[1215, 470, 48, 0], [1300, 560, 40, .4], [1150, 395, 34, .8]].forEach(([x, y, s, a]) => { boilSeed('reel q ' + x); emote('?', x, y, s, 1, 1 + a); });
+    boilSeed('reel cover pill'); paint(rrPts(835, -48, 250, 84, 42), { wash: PAL.cyan, ink: PAL.ink, sw: 1 });
+    letter('ساخت AI', 960, -6, 46, PAL.deep, { align: 'center', weight: 900, ink: false, screen: true });
+    letter('۴۰ نفر تو کلاس،', 960, 112, 104, PAL.cream, { align: 'center', weight: 900, stroke: PAL.deep, screen: true });
+    letter('یه معلم، و سؤالی که', 960, 228, 64, PAL.cream, { align: 'center', weight: 800, stroke: PAL.deep, screen: true });
+    letter('هیچ‌وقت پرسیده نشد', 960, 338, 88, PAL.cyan, { align: 'center', weight: 900, stroke: PAL.deep, screen: true });
+    letter('آموزشگاه فردا', 960, 1255, 40, PAL.cream, { align: 'center', weight: 800, stroke: PAL.deep, screen: true });
+  };
+  LOOPS.reelCover.len = 1;
+  // the vertical covers' 9:16 window: x 510–1410, y −260–1340 on the design screen
   const storyView = REEL_VIEW;
-  REEL_VIEW = t => window.LOOP === LOOPS.cover ? { cx: 960, cy: 540, h: 1600 } : storyView(t);
+  REEL_VIEW = t => window.LOOP === LOOPS.cover || window.LOOP === LOOPS.reelCover ? { cx: 960, cy: 540, h: 1600 } : storyView(t);
 })();
