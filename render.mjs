@@ -10,14 +10,19 @@
 //   Make the video:
 //     node render.mjs --clip [--range=0:4] --out=out/video.mp4                               straight to MP4 (one worker)
 //     node render.mjs --frames [--range=0:8] --workers=4                                     JPEG frames → out/frames (parallel, resumable)
+//         (add --redo to render a range again over frames already there, after changing those shots)
 //     node render.mjs --encode --out=out/video.mp4                                           out/frames → MP4
+//         (add --small for about a third of the size, --tiny for 720p at about a tenth; or --crf=N, --height=N)
 //   Standalone loops (LOOPS in the page): add --loop=<name> to any of the above (times are then loop times), or
 //     node render.mjs --loop=emotions --png --out=out/loop_emotions                          one cycle as PNGs (for GIFs)
-//   Music: --audio=assets/song.mp3 (or PROJECT.audio) is muxed into --clip and --encode. Other flags: --fps=24,
-//   --chrome=<path to Chrome/Chromium>.
+//   Music: --audio=assets/song.mp3 (or PROJECT.audio; --audio=none for silence) is muxed into --clip and --encode. Other flags: --fps=24,
+//   --chrome=<path to Chrome/Chromium>, --offline (skip Google Fonts; use the local fonts only),
+//   --lite (flat washes instead of watercolour fills: fast previews without a GPU; see LITE in core.js),
+//   --reel (the 1080×1920 Instagram/Reels version: frames in out/frames_reel; use it on --frames and --encode alike),
+//   --verbose (show the page's WebGL and network warnings too), --style=<name> (a painting style from src/styles.js).
 import puppeteer from 'puppeteer-core';
 import { spawn } from 'node:child_process';
-import { mkdirSync, writeFileSync, existsSync, statSync, renameSync, readdirSync } from 'node:fs';
+import { mkdirSync, writeFileSync, existsSync, statSync, renameSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { homedir } from 'node:os';
@@ -34,8 +39,7 @@ function playwrightChromes() {
     .map(n => `${dir}/${n}/chrome-linux64/chrome`);
 }
 const CHROME = CHROMES.find(p => p && existsSync(p));
-if (!CHROME) { console.error('Chrome not found: pass --chrome=<path> or set CHROME_PATH'); process.exit(1); }
-const fps = +(args.fps || 24), FRAMES_DIR = 'out/frames';
+const fps = +(args.fps || 24), FRAMES_DIR = args.reel ? 'out/frames_reel' : 'out/frames';   // --reel: the 9:16 Instagram version, kept apart
 const run = (cmd, a) => new Promise((ok, bad) => { const p = spawn(cmd, a, { stdio: 'inherit' }); p.on('close', c => c ? bad(new Error(cmd + ' exited ' + c)) : ok()); });
 const times = s => String(s).split(',').map(Number);
 const span = s => String(s).split(':').map(Number);
@@ -43,14 +47,24 @@ const span = s => String(s).split(':').map(Number);
 const fields = s => { const out = []; let d = 0, cur = ''; for (const ch of String(s)) { if (ch === ',' && !d) { out.push(cur); cur = ''; continue; } d += ch === '(' ? 1 : ch === ')' ? -1 : 0; cur += ch; } out.push(cur); return out.map(v => isNaN(+v) ? v : +v); };
 
 if (args.encode) {
-  const out = args.out || 'out/video.mp4', n = readdirSync(FRAMES_DIR).filter(f => f.endsWith('.jpg')).length, audio = args.audio;
-  console.log(`encoding ${n} frames → ${out}${audio ? ' with ' + audio : ''}`);
+  const out = args.out || 'out/video.mp4', n = readdirSync(FRAMES_DIR).filter(f => f.endsWith('.jpg')).length;
+  // the song from --audio, else PROJECT.audio in src/config.js; --audio=none for a silent video
+  const audio = args.audio === 'none' ? null : args.audio || (readFileSync('src/config.js', 'utf8').match(/audio:\s*'([^']+)'/) || [])[1];
+  // size: the default is near-lossless (big); --small keeps 1080p at a lower quality (about a third of the size);
+  // --tiny is 720p for messengers and social media (about a tenth). --crf=N (17 best … 30 smallest) and --height=N
+  // set them by hand.
+  const Q = args.tiny ? { crf: 27, height: args.reel ? 1280 : 720, ab: '128k' } : args.small ? { crf: 24, ab: '160k' } : { crf: 17, ab: '192k' };
+  const crf = String(args.crf ?? Q.crf), height = args.height ?? Q.height;
+  console.log(`encoding ${n} frames → ${out}${audio ? ' with ' + audio : ''} (crf ${crf}${height ? ', ' + height + 'p' : ''})`);
   await run('ffmpeg', ['-y', '-loglevel', 'error', '-stats', '-framerate', String(fps), '-i', `${FRAMES_DIR}/f%05d.jpg`,
-    ...(audio ? ['-i', audio, '-map', '0:v', '-map', '1:a', '-c:a', 'aac', '-b:a', '192k', '-shortest'] : []),
-    '-c:v', 'libx264', '-preset', 'slow', '-crf', '17', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out]);
+    ...(audio ? ['-i', audio, '-map', '0:v', '-map', '1:a', '-c:a', 'aac', '-b:a', Q.ab, '-shortest'] : []),
+    ...(height ? ['-vf', `scale=-2:${height}:flags=lanczos`] : []),
+    '-c:v', 'libx264', '-preset', 'slow', '-crf', crf, '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out]);
   console.log('wrote ' + out);
   process.exit(0);
 }
+
+if (!CHROME) { console.error('Chrome not found: pass --chrome=<path> or set CHROME_PATH'); process.exit(1); }   // (--encode needs only ffmpeg)
 
 // --soft-gl: no GPU on this machine; render WebGL in software (SwiftShader), which Chrome only allows when asked.
 // --gpu-angle=vulkan|gl-egl: headless Linux on an NVIDIA GPU (e.g. a cloud or cluster node); plain --use-gl=angle gets
@@ -62,21 +76,40 @@ const gpu = args['soft-gl'] ? ['--use-angle=swiftshader', '--enable-unsafe-swift
   : process.platform === 'win32' ? ['--use-angle=d3d11'] : process.platform === 'darwin' ? ['--use-angle=metal'] : ['--use-gl=angle'];
 // Ubuntu 23.10+ blocks Chrome's user-namespace sandbox; headless rendering of local files doesn't need it.
 const sandbox = process.platform === 'linux' ? ['--no-sandbox'] : [];
-const browser = await puppeteer.launch({
+const launch = () => puppeteer.launch({
   executablePath: CHROME, headless: true, protocolTimeout: 0,
   args: [...sandbox, '--allow-file-access-from-files', '--ignore-gpu-blocklist', ...gpu, '--enable-gpu-rasterization', '--window-size=1920,1080', '--disable-renderer-backgrounding', '--disable-background-timer-throttling']
 });
+let browser = await launch(), relaunching = null;
+// Chrome (or its GPU process) can die mid-render on a long job; --frames reopens it and carries on (see below).
+const ensureBrowser = () => browser.connected ? browser : (relaunching ??= launch().then(b => { browser = b; relaunching = null; return b; }));
+// Harmless page noise, hidden unless --verbose: p5.brush's WebGL uniform warnings, GPU stalls, and fonts that can't be
+// fetched (no internet or a filtered network; the local fonts are used instead).
+const NOISE = /WebGL: INVALID_OPERATION|GPU stall|net::ERR_/;
 async function openPage(tag = '') {
-  const page = await browser.newPage();
-  page.on('console', m => { if (['error', 'warn'].includes(m.type())) console.log(`[page${tag}]`, m.text()); });
+  const page = await (await ensureBrowser()).newPage();
+  page.on('console', m => { if (['error', 'warn'].includes(m.type()) && (args.verbose || !NOISE.test(m.text()))) console.log(`[page${tag}]`, m.text()); });
   page.on('pageerror', e => console.log(`[page error${tag}]`, e.message));
-  await page.goto(pathToFileURL(resolve('studio.html')).href + '?render', { waitUntil: 'networkidle0' });
+  // --offline: skip Google Fonts (a machine without internet, or behind a proxy that stalls them); the page falls back
+  // to the local fonts (Vazirmatn comes from node_modules) instead of waiting on the network.
+  if (args.offline) {
+    await page.setRequestInterception(true);
+    page.on('request', r => /fonts\.(googleapis|gstatic)\.com/.test(r.url()) ? r.abort() : r.continue());
+  }
+  await page.goto(pathToFileURL(resolve('studio.html')).href + '?render' + (args.lite ? '&lite' : '') + (args.style ? '&style=' + args.style : '') + (args.reel ? '&reel' : ''), { waitUntil: 'networkidle0', timeout: 180000 });   // the first frame paints during load; slow styles need time
   await page.waitForFunction('window.ready === true', { timeout: 60000 });
   if (args.loop) {
     const ok = await page.evaluate(name => { if (!LOOPS[name]) return false; window.LOOP = LOOPS[name]; return true; }, args.loop);
     if (!ok) { console.error(`no loop named "${args.loop}"`); process.exit(1); }
   }
   return page;
+}
+// Software WebGL (--soft-gl) can't share the machine between several pages: extra workers come back with silently black
+// frames. So it renders with one.
+function workerCount(n) {
+  const w = +(args.workers || n);
+  if (args['soft-gl'] && w > 1) { console.log(`--soft-gl: rendering with 1 worker (asked for ${w}); more give black frames`); return 1; }
+  return w;
 }
 const frameOf = async (page, t, type, q) => {
   const url = await page.evaluate((t, type, q) => window.renderAt(t, type, q), t, type, q);
@@ -106,7 +139,7 @@ if (args.sheet || args.strip) {
   // PNG sequence (for GIFs): a loop's full cycle (frame n equals frame 0, so it isn't rendered), or --range=a:b.
   const probe = await openPage(), len = await lengthOf(probe); await probe.close();
   const [a, b] = args.range ? span(args.range) : [0, len], n = Math.round((b - a) * fps);
-  const out = args.out || `out/${args.loop ? 'loop_' + args.loop : 'png'}`, workers = +(args.workers || 3); mkdirSync(out, { recursive: true });
+  const out = args.out || `out/${args.loop ? 'loop_' + args.loop : 'png'}`, workers = workerCount(3); mkdirSync(out, { recursive: true });
   let next = 0; const start = Date.now();
   await Promise.all(Array.from({ length: workers }, async (_, w) => {
     const page = await openPage('#' + w);
@@ -116,17 +149,27 @@ if (args.sheet || args.strip) {
 } else if (args.frames) {
   // Parallel and resumable: each worker pulls the next missing frame; files are written atomically.
   const probe = await openPage(), len = await lengthOf(probe); await probe.close();
-  const [a, b] = args.range ? span(args.range) : [0, len], workers = +(args.workers || 4);
+  const [a, b] = args.range ? span(args.range) : [0, len], workers = workerCount(4);
   mkdirSync(FRAMES_DIR, { recursive: true });
   const first = Math.round(a * fps), last = Math.min(Math.ceil(len * fps) - 1, Math.round(b * fps) - 1);
-  const todo = []; for (let i = first; i <= last; i++) { const f = `${FRAMES_DIR}/f${String(i).padStart(5, '0')}.jpg`; if (!existsSync(f) || statSync(f).size < 1000) todo.push(i); }
+  const todo = []; for (let i = first; i <= last; i++) { const f = `${FRAMES_DIR}/f${String(i).padStart(5, '0')}.jpg`; if (args.redo || !existsSync(f) || statSync(f).size < 1000) todo.push(i); }   // --redo: render the range again even where frames exist
   console.log(`${todo.length} frames to render (${last - first + 1 - todo.length} already done), ${workers} workers`);
   let next = 0, done = 0; const start = Date.now();
   await Promise.all(Array.from({ length: workers }, async (_, w) => {
-    const page = await openPage('#' + w);
+    let page = await openPage('#' + w);
     while (next < todo.length) {
       const i = todo[next++], f = `${FRAMES_DIR}/f${String(i).padStart(5, '0')}.jpg`;
-      const buf = await frameOf(page, i / fps, 'image/jpeg', .94);
+      let buf;
+      // a page (or the whole browser) that crashes is reopened and the frame tried again, up to 3 times
+      for (let attempt = 1; !buf; attempt++) {
+        try { buf = await frameOf(page, i / fps, 'image/jpeg', .94); }
+        catch (e) {
+          if (attempt >= 3) throw e;
+          console.log(`frame ${i} failed (${e.message.split('\n')[0]}); reopening the page and trying again`);
+          await page.close().catch(() => {});
+          page = await openPage('#' + w);
+        }
+      }
       writeFileSync(f + '.tmp', buf); renameSync(f + '.tmp', f);
       if (++done % 24 === 0 || done === todo.length) {
         const el = (Date.now() - start) / 1000;

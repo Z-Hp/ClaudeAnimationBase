@@ -7,6 +7,40 @@
 const SHOTS = [];
 function shots(list) { SHOTS.push(...list); SHOTS.sort((a, b) => a[0] - b[0]); }
 
+// Fitting shots to a song. A shot is written at its own pace; resync() replays the written shots on the song's clock,
+// so their moments land on the music's. Each row is [song start, shot, options]: `shot` is the written start time of a
+// shot registered with shots() (or a shot function of its own); a row plays until the next row starts. Options:
+//   from, to:  play only this stretch of the shot's written time (default: all of it). The shot is told dur = to, so the
+//              transitions it does at its end (lt > dur - .3) happen at the end of the stretch.
+//   pins:      [[written lt, song time], ...], in order: this written moment lands on that song time. Between pins the
+//              shot's clock runs at a constant speed; keep it within about 0.7–1.4x, or motion looks rushed or floaty.
+//   wipeIn:    colours for the second half of a brush wipe at the row's start, for a stretch that starts mid-shot.
+// Sway, swing and walk cycles that should keep their speed whatever the pins do are driven by t, not lt.
+function resync(table) {
+  const old = SHOTS.slice().sort((a, b) => a[0] - b[0]);
+  const writtenEnd = i => i + 1 < old.length ? old[i + 1][0] : PROJECT.writtenDuration ?? DUR;
+  const rows = table.map(([start, shot, o = {}], r) => {
+    const end = r + 1 < table.length ? table[r + 1][0] : DUR;
+    let fn = shot, full = end - start;   // a song-only shot runs at its own pace
+    if (typeof shot === 'number') {
+      const j = old.findIndex(s => Math.abs(s[0] - shot) < 1e-6);
+      if (j < 0) throw new Error('resync: no written shot starts at ' + shot);
+      fn = old[j][1]; full = writtenEnd(j) - shot;
+    }
+    const from = o.from ?? 0, to = o.to ?? full;
+    const pins = [[from, 0], ...(o.pins || []).map(([w, s]) => [w, s - start]), [to, end - start]];
+    return [start, (t, lt, dur) => {
+      let i = 1; while (i < pins.length - 1 && lt > pins[i][1]) i++;
+      const [wa, na] = pins[i - 1], [wb, nb] = pins[i];
+      fn(t, wa + (lt - na) * (wb - wa) / (nb - na), to);
+      if (o.wipeIn && lt < .3) brushWipe(.5 + lt / .6, o.wipeIn);
+    }];
+  });
+  SHOTS.length = 0; SHOTS.push(...rows);
+}
+// Shots that exist only on the song's timeline (no written start), by name, for resync().
+const SHOT_FNS = {};
+
 // Standalone loops (model sheets, GIFs, tests), outside the main timeline: window.LOOP = LOOPS[name] swaps the whole
 // frame for that function, called with loop time. Give each a length: LOOPS.x = t => { ... }; LOOPS.x.len = 4;
 const LOOPS = {};
@@ -35,10 +69,12 @@ function placeholder(t) {
 //   start of shot B: if (lt < .3) brushWipe(.5 + lt / .6);
 function brushWipe(p, cols = [PAL.clayDk, PAL.clay]) {
   if (p <= 0 || p >= 1) return;
-  const [c1, c2] = cols, n = 5, bh = (H + 420) / n + 40;
-  push(); translate(W / 2, H / 2); rotate(-.1); translate(-W / 2, -H / 2);
+  flushLetters();   // lettering queued so far goes under the wipe, not on top of it
+  // it covers the visible screen: the whole 1920×1080 frame, or a reel's 9:16 window of it
+  const W = VIEW.w, H = VIEW.h, [c1, c2] = cols, n = REEL ? 7 : 5, bh = (H + 420) / n + 40;
+  push(); translate(VIEW.x + W / 2, VIEW.y + H / 2); rotate(-.1); translate(-W / 2, -H / 2);
   for (let i = 0; i < n; i++) {
-    const y0 = -230 + i * (H + 420) / n, d = [0, .14, .06, .18, .1][i];
+    const y0 = -230 + i * (H + 420) / n, d = [0, .14, .06, .18, .1, .04, .16][i];
     const q = p < .5 ? easeOut(clamp((p * 2 - d) / (1 - d))) : ease(clamp(((p - .5) * 2 - d) / (1 - d)));
     const x0 = p < .5 ? -300 : lerp(-300, W + 400, q), x1 = p < .5 ? lerp(-300, W + 400, q) : W + 400;
     if (x1 - x0 < 30) continue;

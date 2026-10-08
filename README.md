@@ -1,41 +1,74 @@
-# Claude Animation Base
+# کیت انیمیشن آموزشگاه فردا
 
-This is a small starter kit with code, instructions and assets for animating a character in [p5.js](https://p5js.org) and [p5.brush](https://github.com/acamposuribe/p5.brush) with Claude Opus 5.5. It's based on the code from the music video [I'm Upping My P(doom)](https://github.com/JohnHeibel/PDoomVideo) and an analysis of what the model did and didn't do well. I highly recommend playing around with your prompting: make it give you the storyboard before coding, give it very broad instructions, try being very specific, ask for subagents, and try a bunch of other fun ways of testing the model's capabilities. In my testing, it can do a lot with very little, but it's also quite accurate when you give it more requirements. Also try asking the model to swap out the character or make new emotions or costumes, give it your own reference images, and try many other fun things like that. I've found that the reasoning level corresponds to how "extravagant" and detail-oriented the model makes the scene. All test videos were generated with Opus 5.5 on xhigh reasoning in Claude Code.
+«از امروز به فردا بیایید»
 
-![Clawd's emotions, animated](docs/emotions.webp)
+این مخزن یک کیت کوچک برای ساختن انیمیشن‌های کوتاهِ دست‌نقاشی‌شده با [p5.js](https://p5js.org) و [p5.brush](https://github.com/acamposuribe/p5.brush) است که برای **آموزشگاه فردا** (مؤسسه علمی آزاد فردا، بابلسر) شخصی‌سازی شده. نسخه‌ی اصلی‌اش [Claude Animation Base](README.en.md) است، بر اساس کد موزیک‌ویدیوی [I'm Upping My P(doom)](https://github.com/JohnHeibel/PDoomVideo). کد، دستورالعمل‌ها و کاراکترها طوری نوشته شده‌اند که یک مدل هوش مصنوعی (مثل Claude در Claude Code) بتواند با یک درخواست ساده یک ویدیوی کامل بسازد.
 
-## Make a video
+![فردی، نماد آموزشگاه فردا](docs/fardi.jpg)
 
-Clone it, open it in Claude Code (or any coding agent) and ask for what you want:
+## چه چیزهایی شخصی‌سازی شده
 
-> Read ANIMATION_GUIDE.md, then make a 15-second video of Clawd trying to catch a butterfly.
+- **فردی (Fardi):** کاراکتر تازه‌ی آموزشگاه. یک مکعب فیروزه‌ای با عینک گرد (معلم) و کلاه فارغ‌التحصیلی با منگوله‌ی طلایی (دانش‌آموز). همه‌ی ۳۱ احساس، پنج نمای کلیدی، دست‌ها و قلاب‌های Clawd را دارد. در [src/fardi.js](src/fardi.js).
+- **هویت بصری سایت:** رنگ‌های تم کهکشانیِ سایت (آبی برند، فیروزه‌ای، نیلی، بنفش سحابی، سرمه‌ای عمیق) به پالت اضافه شده‌اند (`PAL.brand`، `PAL.cyan`، `PAL.cosmos`، `PAL.nebula`، `PAL.deep` و ...).
+- **متن فارسی:** `letter()` حالا متن فارسی را خودکار راست‌به‌چپ و با فونت وزیرمتن (همان فونت سایت) می‌چیند، حروف را درست به هم می‌چسباند، و با `reveal` می‌تواند متن را از راست بنویسد. قانون «بدون متن» کیت اصلی به «متنِ کم و فارسی» تغییر کرده (راهنما، قانون ۲).
+- **ویدیوی معرفی آموزشگاه:** «از امروز به فردا بیایید»، ۲۴ ثانیه، بر اساس مسیر رشد سایت: ۰۱ اندیشه تحلیلی ← ۰۲ یادگیری پروژه‌محور ← ۰۳ آمادگی برای آینده. کد در [src/scenes/farda_intro.js](src/scenes/farda_intro.js) و استوری‌بورد در [STORYBOARD.md](STORYBOARD.md).
+- **هفت سبک نقاشی:** آبرنگ (پیش‌فرض)، گواش، مداد رنگی، فلت، کارتونی، کاغذ بریده و گچ روی تخته، با `style` در `src/config.js` ([src/styles.js](src/styles.js)). هر صحنه و کاراکتری در هر سبکی کشیده می‌شود.
+- **رندر بدون کارت گرافیک:** حالت `--lite` (رنگ تخت به جای پرکردنِ آبرنگی) رندر را در WebGL نرم‌افزاری از حدود یک دقیقه به چند ثانیه برای هر فریم می‌رساند، و `--offline` بدون اینترنت کار می‌کند.
+- **مستندات فارسی:** همین فایل و [ANIMATION_GUIDE.md](ANIMATION_GUIDE.md). نسخه‌های اصلی انگلیسی در [README.en.md](README.en.md) و [ANIMATION_GUIDE.en.md](ANIMATION_GUIDE.en.md) هستند.
 
-The model storyboards first, builds shot by shot, renders contact sheets to check its own work, and writes `out/video.mp4`. [ANIMATION_GUIDE.md](ANIMATION_GUIDE.md) holds the rules it follows: handmade, alive, one piece, no text, transitions always, something happens in every scene, and a solid medium of brush strokes, flat 2D and boiling linework. It also covers timing for the viewer and the core principles of character animation.
+## ساختن یک ویدیو
 
-## Run it yourself
+مخزن را کلون کن، در Claude Code (یا هر ایجنت کدنویسی دیگر) بازش کن و چیزی را که می‌خواهی بخواه:
 
-You need Node.js, Google Chrome and ffmpeg.
+> ANIMATION_GUIDE.md را بخوان، بعد یک ویدیوی ۱۵ ثانیه‌ای بساز که در آن فردی به یک دانش‌آموز کمک می‌کند قضیه‌ی فیثاغورس را کشف کند.
 
-Without a dedicated GPU, p5.brush's watercolour fills make render times fairly slow, measured in seconds per frame. If you're running on integrated graphics, I recommend asking the model to avoid those fills and replace them with something else appropriate. (I love the look of the watercolours, though.)
+> ANIMATION_GUIDE.md را بخوان، بعد یک تیزر ۱۰ ثانیه‌ای برای دوره‌ی «انیمیشن‌سازی با هوش مصنوعی» بساز که آخرش نام دوره نوشته شود.
+
+مدل اول استوری‌بورد می‌نویسد، شات به شات می‌سازد، برای بررسی کار خودش برگه‌های تماس رندر می‌کند و در آخر `out/video.mp4` را می‌نویسد. [ANIMATION_GUIDE.md](ANIMATION_GUIDE.md) قانون‌هایی را دارد که دنبال می‌کند: دست‌ساز، زنده، یک اثر واحد، متنِ کم، همیشه گذار، در هر صحنه یک اتفاق، و یک رسانه‌ی ثابت از ضربه‌های قلم‌مو، دوبعدیِ تخت و خط‌های جوشان. زمان‌بندی برای بیننده و اصول اصلی انیمیشن کاراکتر را هم پوشش می‌دهد.
+
+چند پیشنهاد برای درخواست‌ها: از مدل بخواه قبل از کد استوری‌بورد را نشانت بدهد، گاهی دستورهای خیلی کلی بده و گاهی خیلی دقیق، از او بخواه احساس یا لباس تازه برای فردی بسازد، یا تصویر مرجع خودت را به او بده.
+
+## اجرا روی سیستم خودت
+
+به Node.js، Google Chrome و ffmpeg نیاز داری.
 
 ```bash
 npm install
 node render.mjs --clip --out=out/video.mp4
 ```
 
-That renders the 11-second demo in [src/scenes/demo.js](src/scenes/demo.js). Open [studio.html](studio.html) in Chrome to scrub through it. Add `?loop=emotions` or `?loop=views` to see the model sheets. If Chrome isn't in a standard location, pass `--chrome=<path>` or set `CHROME_PATH`.
+این دستور ویدیوی داستانی «از امروز به فردا بیایید» (۲ دقیقه و ۴۶ ثانیه؛ `src/scenes/story_*.js`، استوری‌بورد در [STORYBOARD_STORY.md](STORYBOARD_STORY.md)) را همراه آهنگش (`assets/music.m4a`) رندر می‌کند. برش‌ها و لحظه‌های داستان روی آهنگ چیده شده‌اند ([src/scenes/story_sync.js](src/scenes/story_sync.js))، و در `studio.html` دکمه‌ی ▶ (یا Space) ویدیو را با آهنگ پخش می‌کند. برای ویدیوی بی‌صدا `--audio=none` بده. برای ویدیوی معرفی ۲۴ ثانیه‌ای، در `studio.html` تگ‌های `story_*.js` را با `farda_intro.js` عوض کن و در `src/config.js` مقدار `duration` را `24` بگذار و `audio` را حذف کن. برای جلو و عقب بردن ویدیو، [studio.html](studio.html) را در Chrome باز کن. با `?loop=fardi` برگه‌ی مدل فردی، و با `?loop=emotions` یا `?loop=views` برگه‌های Clawd را می‌بینی. `?lite` حالت سبک را روشن می‌کند. اگر Chrome در جای استاندارد نیست، `--chrome=<مسیر>` بده یا `CHROME_PATH` را تنظیم کن.
 
-On Linux, `render.mjs` starts Chrome with `--no-sandbox` (Ubuntu 23.10+ blocks Chrome's sandbox in headless use) and also finds a Chromium installed by Playwright. With no GPU at all, add `--soft-gl` to render WebGL in software: slow on watercolour fills, but it works. On a headless Linux machine with an NVIDIA GPU (a cloud or cluster node), add `--gpu-angle=gl-egl` (or `vulkan`); `node gpu_probe.mjs <chrome path>` shows which renderer each set of flags gets.
+**بدون کارت گرافیک:** پرکردن‌های آبرنگیِ p5.brush بدون GPU خیلی کندند. `--soft-gl --lite` اضافه کن:
 
-## What's here
+```bash
+node render.mjs --soft-gl --lite --offline --frames      # فریم‌ها در out/frames (قابل ادامه اگر قطع شد)
+node render.mjs --encode --out=out/video.mp4             # ساختن MP4 از فریم‌ها
+node render.mjs --encode --small --out=out/video_small.mp4   # کم‌حجم (۱۰۸۰p، حدود یک‌سوم)
+node render.mjs --encode --tiny --out=out/video_tiny.mp4     # خیلی کم‌حجم (۷۲۰p، برای تلگرام و اینستاگرام)
+node render.mjs --frames --reel --workers=4                # نسخه‌ی عمودی ۹:۱۶ برای ریلز (فریم‌ها در out/frames_reel)
+node render.mjs --encode --reel --small --out=out/reel.mp4  # ساختن ریلز ۱۰۸۰×۱۹۲۰
+```
 
-| path | what it is |
+در `--soft-gl` رندر با یک worker انجام می‌شود (چند worker در WebGL نرم‌افزاری فریم سیاه می‌دهند) و حدود ۸ ثانیه برای هر فریم طول می‌کشد، یعنی ویدیوی ۲۴ ثانیه‌ای حدود ۷۵ دقیقه. نسخه‌ی نهایی با کیفیت کامل را روی سیستمی با کارت گرافیک و بدون `--lite` رندر کن.
+
+روی لینوکس، `render.mjs` کروم را با `--no-sandbox` اجرا می‌کند و Chromiumی را که Playwright نصب کرده هم پیدا می‌کند. روی سرور لینوکسی با کارت NVIDIA، `--gpu-angle=gl-egl` (یا `vulkan`) اضافه کن؛ `node gpu_probe.mjs <مسیر کروم>` نشان می‌دهد هر مجموعه پرچم کدام رندرکننده را می‌گیرد.
+
+## چه چیزی کجاست
+
+| مسیر | چیست |
 |---|---|
-| [ANIMATION_GUIDE.md](ANIMATION_GUIDE.md) | The rules, the workflow and the full API. Read it first. |
-| [src/clawd.js](src/clawd.js) | Clawd: views, emotions, eyes, mouths, hats, emotes, dances |
-| [src/core.js](src/core.js) | Painting, timing, motion helpers, camera, light, paper |
-| [src/timeline.js](src/timeline.js) | Shots, loops and the brush-wipe transition |
-| [src/config.js](src/config.js) | Length and tempo |
-| [src/scenes/](src/scenes/) | Your video goes here (the demo is an example) |
-| [render.mjs](render.mjs) | Headless renderer: contact sheets, frame strips, crops, stills, MP4 |
-| [docs/](docs/) | Model sheets: [emotions](docs/emotions.jpg) (also [animated](docs/emotions.webp)) and [views, motion and hats](docs/views.jpg) |
+| [ANIMATION_GUIDE.md](ANIMATION_GUIDE.md) | قانون‌ها، روند کار، هویت فردا و کل API. اول این را بخوان. |
+| [STORYBOARD.md](STORYBOARD.md) | استوری‌بوردِ ویدیوی معرفی آموزشگاه |
+| [src/fardi.js](src/fardi.js) | فردی، نماد آموزشگاه، و برگه‌ی مدلش |
+| [src/clawd.js](src/clawd.js) | ریگ کاراکتر: نماها، احساس‌ها، چشم‌ها، دهان‌ها، کلاه‌ها، عینک، emoteها، رقص‌ها |
+| [src/core.js](src/core.js) | نقاشی، پالت و رنگ‌های برند، زمان‌بندی، حرکت، دوربین، نور، کاغذ، متن فارسی، حالت lite |
+| [src/timeline.js](src/timeline.js) | شات‌ها، حلقه‌ها و گذارِ براش‌وایپ |
+| [src/config.js](src/config.js) | طول ویدیو و سرعت ضرب |
+| [src/scenes/](src/scenes/) | ویدیوها: `farda_intro.js` (معرفی آموزشگاه) و `demo.js` (دموی کیت اصلی) |
+| [render.mjs](render.mjs) | رندرکننده: برگه‌ی تماس، نوار فریم، برش، تصویر ثابت، MP4 |
+| [docs/](docs/) | برگه‌های مدل: [فردی](docs/fardi.jpg)، [احساس‌های Clawd](docs/emotions.jpg) (و [متحرک](docs/emotions.webp))، [نماها، حرکت و کلاه‌ها](docs/views.jpg) |
+
+## مجوز
+
+MIT، مثل کیت اصلی ([LICENSE](LICENSE)).

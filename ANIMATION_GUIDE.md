@@ -1,461 +1,533 @@
-# Animating Clawd
+# راهنمای انیمیشن‌سازی آموزشگاه فردا
 
-Read this whole file before you draw anything. It covers how to make a short, hand-painted cartoon, starring Clawd or any character you design: the rules and animation principles that make it look good, the workflow that catches mistakes, and the full reference for the character and the engine.
+قبل از اینکه چیزی بکشی، کل این فایل را بخوان. این راهنما می‌گوید یک کارتون کوتاهِ دست‌نقاشی‌شده را چطور بسازی، با بازیگریِ **فردی** (نماد آموزشگاه فردا)، **Clawd** (کاراکتر اصلیِ کیت) یا هر کاراکتری که خودت طراحی کنی: قانون‌ها و اصول انیمیشن که ظاهرش را خوب می‌کنند، روند کاری که اشتباه‌ها را می‌گیرد، و مرجع کاملِ کاراکترها و موتور.
 
-The person prompting you decides **what** the video is about. This guide decides **how** it's made. If they ask for something the rules below forbid (a caption, a 3D spin), do what they ask.
+کسی که از تو درخواست می‌کند تعیین می‌کند ویدیو **درباره‌ی چه** باشد. این راهنما تعیین می‌کند **چطور** ساخته شود. اگر چیزی خواست که قانون‌های پایین منع کرده‌اند (مثلاً چرخش سه‌بعدی)، همان کاری را بکن که او خواسته.
 
-**No design here is final.** Clawd, the emotions, the props and the helpers are a starting point, not a limit. Change any of them, Clawd's own design included, and add whatever new characters, props or emotions the idea needs. Paint new things with the same tools and rules, so they belong with the rest.
+**هیچ طراحی‌ای در اینجا نهایی نیست.** فردی، Clawd، احساس‌ها، وسیله‌ها و توابع کمکی نقطه‌ی شروع‌اند، نه محدودیت. هر کدام را، حتی طراحیِ خودِ کاراکترها را، تغییر بده و هر کاراکتر، وسیله یا احساس تازه‌ای که ایده لازم دارد اضافه کن. چیزهای تازه را با همین ابزارها و قانون‌ها نقاشی کن تا با بقیه یکی شوند.
 
-Look at the model sheets first:
-- [docs/emotions.jpg](docs/emotions.jpg): all 31 emotions.
-- [docs/views.jpg](docs/views.jpg): the five key views, the motion helpers and the hats.
+> نسخه‌ی اصلیِ انگلیسیِ این راهنما در [ANIMATION_GUIDE.en.md](ANIMATION_GUIDE.en.md) نگه داشته شده است. نام تابع‌ها و گزینه‌های کد انگلیسی‌اند و همان‌طور که هستند باید نوشته شوند.
 
----
-
-## The three goals
-
-Every rule below serves one of three goals.
-
-- **Handmade.** The video should look like someone painted it by hand, frame by frame. That means brush strokes, ink lines that boil, flat 2D and no lettering.
-- **Alive.** Something is always moving and something is always happening. Faces act instead of snapping, and characters are big enough to feel.
-- **One piece.** It's one short film, not a pile of clips. Plan it before you draw it, and link every scene to the next.
-
-Underneath all three, the viewer has to be able to follow it. Timing (rule 4) is the rule models get wrong most often.
-
-## The rules
-
-### 1. The medium is solid: brush strokes, flat 2D, boil
-
-- **Paint everything with p5.brush through `paint()` and `inkLine()`.** Characters get flat `wash` colour plus an ink outline. Backgrounds get soft watercolour `fill` shapes, usually with no outline or a thin one. Never use plain p5 shapes (`rect`, `ellipse`, `fill()`): they look like 2000s Flash.
-- **The linework boils.** `jit()` and `random()` are reseeded 12 times a second (`BOIL`), so every drawing wobbles slightly, like hand-drawn animation. That's the look; don't fight it. For anything that must stay put from frame to frame (star positions, tuft heights), use `hash(i)`. Give each separate element its own seed with `boilSeed(key)` (see Engine), or one moving thing makes everything drawn after it jitter.
-- **Everything is flat 2D. Never project 3D.** Don't rotate a box in perspective, don't use `rotateY` or WEBGL 3D and don't fake depth with math. Clawd turns through **drawn key views** (front → 3/4 → side → back 3/4 → back), exactly like a cartoon model sheet: see `turn()` and `spinView()`. Depth comes from overlap, scale and colour (farther = smaller, bluer, paler), never from a projection.
-- **Light is the one exception.** p5.brush mixes colour like pigment, so a yellow glow painted over blue turns green, and a thin wash over it turns grey. Use `glow()` for anything that shines: it adds real light, under the paper grain.
-- **Soft palette, no pure black or white.** Use `PAL.ink` for black and `PAL.cream` or `PAL.paper` for white. Keep colours soft and harmonious, and keep Clawd clearly readable against the background.
-
-### 2. No text
-
-- **Show it, don't write it.** Models overuse text. No captions, no titles, no labels on objects, no signs, no speech bubbles with words, no words on screens, no "ZZZ" typed in a font.
-- **Clawd's reactions are painted marks, never letters**: `!`, `?`, zzz, sweat, hearts, a bulb, a rain cloud. Use the emotes (see the reference).
-- **A sign that repeats the story is the classic failure.** If Clawd holds a sign saying "I'm lost", the shot has failed. Show Clawd being lost: looking left, then right, the map upside down, a sweat drop.
-- If the prompt truly needs a word (a name, a shop sign that is the joke), use `letter()`. Paint it into the scene, keep it to one or two words and use it once.
-
-### 3. Something happens in every scene
-
-- **Every shot needs an event:** something changes between its first frame and its last. Clawd wants something, finds something, tries, fails, reacts or gets it. "Clawd stands in a meadow being cute" is not a shot.
-- **One focal action at a time.** Stage it with a clear silhouette and nothing competing for attention, so it reads at a glance.
-- **Cause, then reaction.** When something happens, Clawd reacts to it: a take, an emotion change, a turn toward it. The reaction is often the funniest part, so give it time.
-- **Pay it off.** Whatever you set up in a shot (a door, a sandwich, a strange noise) gets resolved on screen, in that shot or a later one.
-
-### 4. Timing: model the viewer
-
-Timing turns a set of drawings into a story. It's also where generated animation fails most often: everything moves at one brisk speed, events pile on top of each other, and moments are over before anyone understands them.
-
-You know what happens because you wrote the code. The viewer doesn't: they see it once, at full speed, for the first time. **For every moment, ask what the viewer needs to understand and how long that will take them, and time it for that.**
-
-- **Write the reads.** For each shot, list in order what the viewer has to understand. Each item is a *read*. Every read needs time for the eye to find it, time to understand it, and a moment to register before the next thing starts. Small, distant, fast or subtle things take longer to find and understand than big, central, obvious ones.
-- **One read at a time.** Don't start a new read while the viewer is still taking in the last one. When two things happen at once, the viewer sees only one of them. Put a cause and its reaction in sequence, not on top of each other.
-- **Fast actions, slow meanings.** A motion can be very quick if it's anticipated, but what it means needs held time. Anticipation tells the viewer where to look before the action, and the hold after it lets them understand it. Move quickly through what doesn't matter to the story, and spend time on what does. That contrast between quick and held is what gives a film rhythm; one constant speed, fast or slow, makes it flat and hard to follow.
-- **Lead the eye.** The viewer looks at whatever moves, is bright, is big or is being looked at. Before an important read, get their eye to the right place (a character looks at it, the camera moves to it, it moves or lights up first), and give the eye time to get there.
-- **Let the reads set the length.** A shot is as long as its reads need. A shot with many reads can't be short, and a shot whose reads have all landed shouldn't be padded. That includes the last shot: its final read needs time to land before the video ends.
-
-For a worked example, see how the demo times its ending, at the end of this guide.
-
-### 5. Alive
-
-- **Nothing is ever still.** Every emotion has its own idle motion (`feel()`), cameras drift or push, grass sways, stars twinkle and the linework boils. A frozen frame reads as a bug.
-- **Faces act, they never snap.** Change moods with `emotions()`. It does anticipation, a squint, a take and overshoot around every change. Never swap `eyes`/`mouth` by hand between two frames.
-- **Move like a cartoon, not a machine.** Every move follows the animation principles in the next section.
-- **Clawd is big.** In a medium shot, `u` is about 20–28 (Clawd is 10u wide, 8u tall). In a close-up it's 40–70. Tiny Clawds (u < 12) are for wide establishing shots only, and never for the whole video.
-- **Everything moves on a beat.** `PROJECT.bpm` drives every idle, bounce and dance, so the whole film shares one pulse. Put the hits on beats (`pulse()`, `beatN()`), even with no music.
-
-### 6. Transitions always
-
-- **Every seam gets a transition:** into the first shot, between every pair of shots and out of the last one. Never start on a hard frame, and never just stop.
-- **Pick a transition that belongs to the story**, and don't default to the same one every time. Some options:
-  - a brush wipe (`brushWipe`)
-  - an iris or shaped iris (`iris`, `irisShape`)
-  - a whip pan with a smear
-  - a match cut (the same shape or motion across the cut)
-  - a cut on action (cut mid-move, and finish the move in the next shot)
-  - a camera move that carries through into the next shot
-  - a fade or push from paper or black
-- A plain cut is fine only when it's on action or a deliberate smash cut.
-- **Changes inside a shot are transitions too:** emotions go through `emotions()` and turns go through `turn()`. Props arrive and leave on arcs, never popping in.
-
-### 7. One piece: a vision before any code
-
-- **Storyboard first**, in writing, before you write any scene code (the workflow below has the format). If you're working with a person, show them the storyboard and let them react before you build.
-- **One world.** Pick a palette and a setting that carries through, with a colour arc across the video (e.g. cold night → warm dawn as Clawd's mood lifts).
-- **One thread.** The story has a beginning, a middle and an end, and Clawd's emotional arc follows it. Plan the emotion keys across the whole video, not per shot.
-- **Rhyme the ending with the opening:** the same place, pose or motif, changed. It makes the film feel whole.
-- **Link scenes:** motion continues across cuts, and screen direction stays consistent (if Clawd travels right, keep travelling right). Props and characters carry over.
+اول برگه‌های مدل را ببین:
+- [docs/fardi.jpg](docs/fardi.jpg): فردی در پنج نمای کلیدی و ۱۶ احساس.
+- [docs/emotions.jpg](docs/emotions.jpg): هر ۳۱ احساسِ Clawd.
+- [docs/views.jpg](docs/views.jpg): پنج نمای کلیدی، توابع حرکتی و کلاه‌ها.
 
 ---
 
-## Animation principles
+## هویت آموزشگاه فردا
 
-These are the classic principles of character animation, as they apply here. Most of them fix one problem: motion written as code comes out mechanical, because code moves every part at once, on the same curve, by the same amount.
+این کیت برای آموزشگاه فردا (مؤسسه علمی آزاد فردا، بابلسر) شخصی‌سازی شده است. همه‌چیز از سایت آموزشگاه آمده:
 
-- **Anticipation.** Before a big move, make a small move the opposite way: a crouch before a jump, a wind-up before a throw, a squint before a take. It tells the viewer something is coming and where to look. `jump()` and `emotions()` build it in.
-- **Squash and stretch.** Bodies squash on impact and stretch when they move fast, keeping their volume (`sq`).
-- **Slow in, slow out.** Almost nothing moves at a constant speed. Things ease out of one pose and into the next. A plain `lerp` over time looks mechanical, so run its progress through an easing (`ease`, `easeIn`, `easeOut`, `backOut`).
-- **Weight.** How something starts and stops says what it weighs. Heavy things take longer to get going and to stop, and land with little bounce. Light things snap into motion, bounce and flutter to rest.
-- **Arcs.** Living things move on arcs, not straight lines: thrown props, hops, arm swings, head turns (`arcPt`).
-- **Overlapping action and follow-through.** Don't move every part at once. The eyes lead, the body follows, and arms, hats, props and tails drag behind, overshoot and settle last. Offset each part's timing a little from the one it hangs off (`spring`, `ring` and `backOut` for the settle).
-- **Avoid twinning.** Code copies values, so both arms end up at the same angle, both eyes blink together and a crowd bounces in unison. Give one arm the action and the other something smaller, and offset timings, phases and `seed`s between characters.
-- **Exaggeration.** Push poses, takes, squash and leans further than feels natural. In a short cartoon, subtle reads as nothing. If it looks like too much on the sheet, pull it back.
-- **Strong key poses.** Each shot's storytelling poses should read as stills, with a clear silhouette and the body leaning into what it's doing, before any motion goes between them. If the key poses don't read, the motion won't fix it.
-- **Show the thought.** A character notices, thinks, then acts, and the eyes move first. The viewer understands a choice when they see it being made.
-- **Secondary action.** Small actions that support the main one (a hat bobbing, an emote popping, grass stirring) add life, but they never compete with it.
+- **شعار:** «از امروز به فردا بیایید».
+- **مسیر رشد** (بخش «چرا آموزشگاه فردا» در سایت): ۰۱ اندیشه تحلیلی ← ۰۲ یادگیری پروژه‌محور ← ۰۳ آمادگی برای آینده. چون فارسی از راست به چپ نوشته می‌شود، این مسیر روی صفحه **از راست به چپ** پیش می‌رود و کمی بالا می‌آید. جهت حرکتِ «پیش رفتن» در ویدیوهای فردا هم به همین دلیل به سمت چپ است.
+- **تم کهکشانی:** رنگ‌های سایت آبی کهکشانی، فیروزه‌ای، نیلی و بنفش سحابی‌اند. در `PAL` نسخه‌ی نرم‌شده‌شان برای نقاشی آمده است:
+
+| نام | رنگ | کاربرد |
+|---|---|---|
+| `PAL.brand` | `#2F66E0` | آبیِ برند (رنگ اصلی سایت) |
+| `PAL.brandDk` | `#1E3A8A` | آبیِ تیره: کلاه فردی، نوشته‌ی «فردا» روی آسمان روشن |
+| `PAL.brandLt` | `#8FB4F5` | آبیِ روشن |
+| `PAL.cyan` | `#3CCFE6` | فیروزه‌ای درخشان (رنگ تأکیدِ حالت تاریکِ سایت) |
+| `PAL.cosmos` | `#4A45C9` | نیلیِ کاسمیک |
+| `PAL.nebula` | `#A45AE8` | بنفشِ سحابی |
+| `PAL.deep` | `#121833` | سرمه‌ایِ عمیق (پس‌زمینه‌ی تاریکِ سایت) |
+
+- **فونت:** وزیرمتن (Vazirmatn)، همان فونت سایت. از `node_modules/vazirmatn` بارگذاری می‌شود و بدون اینترنت هم کار می‌کند.
+- برای هر ویدیو یک پالت کوچک از این رنگ‌ها انتخاب کن. شب‌های کهکشانی (سرمه‌ای، نیلی، بنفش) و طلوع‌های گرم (آبیِ روشن، طلایی) هر دو با برند جورند.
 
 ---
 
-## Workflow
+## سه هدف
 
-### 1. Storyboard
+هر قانونی در ادامه به یکی از این سه هدف خدمت می‌کند.
 
-Write `STORYBOARD.md` before any scene code:
+- **دست‌ساز.** ویدیو باید طوری باشد که انگار کسی آن را فریم به فریم با دست نقاشی کرده: ضربه‌های قلم‌مو، خط‌های جوهری که «می‌جوشند»، دوبعدیِ تخت، و متنِ کم.
+- **زنده.** همیشه چیزی در حال حرکت و چیزی در حال رخ دادن است. صورت‌ها بازی می‌کنند و ناگهان عوض نمی‌شوند، و کاراکترها آن‌قدر بزرگ‌اند که حسشان دیده شود.
+- **یک اثر واحد.** یک فیلم کوتاه است، نه مشتی کلیپ. قبل از کشیدن برنامه‌ریزی‌اش کن و هر صحنه را به بعدی وصل کن.
+
+زیر هر سه هدف، بیننده باید بتواند داستان را دنبال کند. زمان‌بندی (قانون ۴) همان قانونی است که مدل‌ها بیشتر از همه اشتباه می‌کنند.
+
+## قانون‌ها
+
+### ۱. رسانه ثابت است: ضربه‌ی قلم‌مو، دوبعدیِ تخت، جوشیدن
+
+- **همه‌چیز را با p5.brush و از طریق `paint()` و `inkLine()` نقاشی کن.** کاراکترها رنگ تخت (`wash`) به‌علاوه‌ی دورگیریِ جوهری می‌گیرند. پس‌زمینه‌ها شکل‌های آبرنگیِ نرم (`fill`) می‌گیرند، معمولاً بدون دورگیری یا با دورگیریِ نازک. هرگز از شکل‌های سادهٔ p5 (`rect`، `ellipse`، `fill()`) استفاده نکن: شبیه انیمیشن‌های فلشِ دهه‌ی ۲۰۰۰ می‌شوند.
+- **خط‌ها می‌جوشند.** `jit()` و `random()` دوازده بار در ثانیه (`BOIL`) از نو بذر می‌گیرند، پس هر نقاشی کمی می‌لرزد، مثل انیمیشن دستی. ظاهرش همین است؛ با آن نجنگ. برای چیزهایی که باید از فریمی به فریم دیگر ثابت بمانند (جای ستاره‌ها، ارتفاع علف‌ها) از `hash(i)` استفاده کن. به هر عنصر جدا با `boilSeed(key)` بذر خودش را بده (بخش موتور را ببین)، وگرنه یک چیزِ متحرک باعث می‌شود هر چه بعد از آن کشیده شده بلرزد.
+- **همه‌چیز دوبعدیِ تخت است. هرگز سه‌بعدی تصویر نکن.** جعبه را در پرسپکتیو نچرخان، از `rotateY` یا حالت سه‌بعدیِ WEBGL استفاده نکن و با ریاضی عمقِ ساختگی نساز. کاراکترها از میان **نماهای کلیدیِ کشیده‌شده** می‌چرخند (روبه‌رو ← سه‌رخ ← نیم‌رخ ← سه‌رخِ پشت ← پشت)، دقیقاً مثل برگه‌ی مدلِ کارتون: `turn()` و `spinView()` را ببین. عمق از هم‌پوشانی، اندازه و رنگ می‌آید (دورتر = کوچک‌تر، آبی‌تر، کم‌رنگ‌تر)، نه از تصویرسازی.
+- **نور تنها استثناست.** p5.brush رنگ‌ها را مثل رنگدانه مخلوط می‌کند، پس هاله‌ی زردی که روی آبی نقاشی شود سبز می‌شود و یک لایه‌ی نازک رویش خاکستری. برای هر چیزِ درخشان از `glow()` استفاده کن: نور واقعی اضافه می‌کند، زیر بافت کاغذ.
+- **پالت نرم، بدون سیاه یا سفید خالص.** برای سیاه از `PAL.ink` و برای سفید از `PAL.cream` یا `PAL.paper` استفاده کن. رنگ‌ها نرم و هماهنگ باشند و کاراکتر همیشه روی پس‌زمینه به‌وضوح خوانده شود.
+
+### ۲. متن: کم، فارسی، و هرگز تکرار داستان
+
+در کیتِ اصلی قانون این بود: «هیچ متنی». برای آموزشگاه فردا متنِ فارسی **مجاز است**، ولی کم و حساب‌شده:
+
+- **نشان بده، ننویس.** مدل‌ها در استفاده از متن زیاده‌روی می‌کنند. داستان باید بدون خواندنِ هیچ متنی فهمیده شود. زیرنویس، برچسب روی اشیا، حباب گفتگو با کلمه و کلمه روی صفحه‌نمایش ممنوع است.
+- **متنِ مجاز:** نام «فردا»، شعار «از امروز به فردا بیایید»، عنوانِ کوتاهِ هر مرحله (مثل «۰۱ · اندیشه تحلیلی»)، نام یک دوره یا یک کلمه‌ی کلیدی. هر کدام یک بار، کوتاه (حداکثر چند کلمه) و در جای خالیِ قاب، جایی که با کنش اصلی رقابت نکند.
+- **تابلویی که داستان را تکرار کند، شکست کلاسیک است.** اگر فردی تابلویی دست بگیرد که رویش نوشته «گم شده‌ام»، شات شکست خورده. گم‌شدنِ فردی را نشان بده: به چپ نگاه می‌کند، بعد به راست، نقشه وارونه است، قطره‌ی عرق.
+- **واکنش‌های کاراکترها علامت‌های نقاشی‌شده‌اند، نه حرف**: `!`، `?`، zzz، عرق، قلب، لامپ، ابر باران. از emoteها استفاده کن (مرجع را ببین).
+- **متن هم بازی می‌کند.** با `reveal` از راست نوشته شود (همان‌طور که فارسی نوشته می‌شود)، مکث کند تا خوانده شود، و قبل از رویداد مهم بعدی محو شود یا زیر گذار برود. زمانِ خواندن را هم در برنامه‌ی زمانی (reads) حساب کن: هر کلمه حدود ۰٫۳ تا ۰٫۵ ثانیه.
+- اعداد را فارسی بنویس (۰۱، ۰۲، ۰۳).
+
+```js
+// عنوانی که از راست نوشته می‌شود؛ متن فارسی خودکار راست‌به‌چپ و با وزیرمتن چیده می‌شود
+letter('۰۱ · اندیشه تحلیلی', 1840, 130, 72, PAL.cream, { align: 'right', reveal: easeOut(seg(lt, .5, 1.3)), screen: true });
+```
+
+### ۳. در هر صحنه چیزی رخ می‌دهد
+
+- **هر شات یک رویداد لازم دارد:** چیزی بین فریم اول و آخرش عوض می‌شود. کاراکتر چیزی می‌خواهد، چیزی پیدا می‌کند، تلاش می‌کند، شکست می‌خورد، واکنش نشان می‌دهد یا به آن می‌رسد. «فردی در چمنزار ایستاده و بامزه است» شات نیست.
+- **هر بار یک کنشِ اصلی.** آن را با سایه‌نمای واضح و بدون هیچ رقیبی برای جلب توجه صحنه‌آرایی کن تا در یک نگاه خوانده شود.
+- **اول علت، بعد واکنش.** وقتی چیزی رخ می‌دهد، کاراکتر به آن واکنش نشان می‌دهد: یک take، تغییر احساس، چرخیدن به سمتش. واکنش اغلب بامزه‌ترین بخش است، پس به آن وقت بده.
+- **نتیجه بده.** هر چیزی که در یک شات مطرح کردی (یک در، یک ساندویچ، یک صدای عجیب) روی صفحه حل می‌شود، در همان شات یا بعدتر.
+
+### ۴. زمان‌بندی: به جای بیننده فکر کن
+
+زمان‌بندی مجموعه‌ای از نقاشی‌ها را به داستان تبدیل می‌کند. همچنین جایی است که انیمیشنِ ساخته‌شده با مدل بیشتر از همه شکست می‌خورد: همه‌چیز با یک سرعتِ تند حرکت می‌کند، رویدادها روی هم تلنبار می‌شوند، و لحظه‌ها قبل از اینکه کسی بفهمدشان تمام می‌شوند.
+
+تو می‌دانی چه اتفاقی می‌افتد چون کدش را نوشته‌ای. بیننده نمی‌داند: او یک بار، با سرعت کامل و برای اولین بار می‌بیند. **برای هر لحظه بپرس بیننده چه چیزی را باید بفهمد و فهمیدنش چقدر طول می‌کشد، و برای همان زمان‌بندی کن.**
+
+- **خوانش‌ها (reads) را بنویس.** برای هر شات به ترتیب بنویس بیننده چه چیزهایی را باید بفهمد. هر مورد یک *خوانش* است. هر خوانش زمان لازم دارد تا چشم پیدایش کند، تا فهمیده شود، و لحظه‌ای تا جا بیفتد قبل از اینکه چیز بعدی شروع شود. چیزهای کوچک، دور، سریع یا ظریف دیرتر از چیزهای بزرگ، مرکزی و آشکار پیدا و فهمیده می‌شوند.
+- **هر بار یک خوانش.** تا بیننده هنوز خوانش قبلی را جذب می‌کند، خوانش تازه شروع نکن. وقتی دو چیز همزمان رخ دهند، بیننده فقط یکی را می‌بیند. علت و واکنشش را پشت سر هم بگذار، نه روی هم.
+- **کنش‌های سریع، معناهای آهسته.** یک حرکت اگر پیش‌بینی شده باشد (anticipation) می‌تواند خیلی سریع باشد، ولی معنایش زمانِ مکث لازم دارد. پیش‌بینی به بیننده می‌گوید قبل از کنش کجا را نگاه کند، و مکثِ بعد از آن فرصت فهمیدن می‌دهد. از چیزهایی که برای داستان مهم نیستند سریع بگذر و روی چیزهای مهم وقت بگذار. همین تضادِ سریع و مکث به فیلم ریتم می‌دهد؛ یک سرعت ثابت، چه تند چه کند، آن را بی‌روح و سخت‌فهم می‌کند.
+- **چشم را هدایت کن.** بیننده به هر چیزی نگاه می‌کند که حرکت می‌کند، روشن است، بزرگ است یا کسی به آن نگاه می‌کند. قبل از یک خوانش مهم، چشمش را به جای درست ببر (کاراکتر به آن نگاه کند، دوربین به سمتش برود، اول خودش حرکت کند یا روشن شود) و به چشم فرصت رسیدن بده.
+- **خوانش‌ها طول شات را تعیین کنند.** شات به اندازه‌ای طول می‌کشد که خوانش‌هایش لازم دارند. شاتی با خوانش‌های زیاد نمی‌تواند کوتاه باشد، و شاتی که همه‌ی خوانش‌هایش جا افتاده نباید کش داده شود. این درباره‌ی شات آخر هم صدق می‌کند: خوانش پایانی‌اش باید قبل از تمام شدن ویدیو جا بیفتد.
+
+برای یک نمونه‌ی کامل، زمان‌بندیِ پایانِ دمو را در انتهای این راهنما ببین.
+
+### ۵. زنده
+
+- **هیچ‌چیز هرگز ساکن نیست.** هر احساس حرکتِ بیکاریِ خودش را دارد (`feel()`)، دوربین‌ها آرام شناورند یا جلو می‌روند، علف تکان می‌خورد، ستاره‌ها چشمک می‌زنند و خط‌ها می‌جوشند. فریمِ یخ‌زده مثل باگ خوانده می‌شود.
+- **صورت‌ها بازی می‌کنند، ناگهان عوض نمی‌شوند.** احساس‌ها را با `emotions()` (برای فردی: `fardiEmotions()`) عوض کن. این تابع دور هر تغییر پیش‌بینی، چشم‌تنگ‌کردن، take و فراجهش می‌سازد. هرگز `eyes`/`mouth` را بین دو فریم دستی عوض نکن.
+- **مثل کارتون حرکت کن، نه مثل ماشین.** هر حرکت از اصول انیمیشنِ بخش بعد پیروی می‌کند.
+- **کاراکتر بزرگ است.** در نمای متوسط `u` حدود ۲۰ تا ۲۸ است (بدنه ۱۰u پهن و ۸u بلند است). در نمای نزدیک ۴۰ تا ۷۰. کاراکترهای ریز (u < 12) فقط برای نماهای بازِ معرفیِ محیط‌اند، هرگز برای کل ویدیو.
+- **همه‌چیز روی ضرب حرکت می‌کند.** `PROJECT.bpm` هر حرکت بیکاری، پرش و رقصی را می‌راند، پس کل فیلم یک نبض دارد. ضربه‌ها را روی ضرب‌ها بگذار (`pulse()`، `beatN()`)، حتی بدون موسیقی.
+
+### ۶. همیشه گذار
+
+- **هر درز یک گذار می‌گیرد:** ورود به شات اول، بین هر دو شات، و خروج از شات آخر. هرگز با یک فریمِ خشک شروع نکن و هرگز ناگهان تمام نکن.
+- **گذاری انتخاب کن که به داستان تعلق دارد** و هر بار همان را تکرار نکن. چند گزینه:
+  - براش‌وایپ (`brushWipe`)
+  - آیریس یا آیریسِ شکل‌دار (`iris`، `irisShape`)
+  - ویپ‌پن با خطوط سرعت و smear
+  - برش تطبیقی (همان شکل یا حرکت دو طرف برش)
+  - برش روی حرکت (وسط یک حرکت ببر و حرکت را در شات بعد تمام کن)
+  - حرکت دوربینی که به شات بعد ادامه پیدا می‌کند
+  - محو شدن یا فشار از کاغذ یا تاریکی
+- برش ساده فقط وقتی روی حرکت باشد یا عمداً ناگهانی (smash cut) قابل قبول است.
+- **تغییرهای درون یک شات هم گذارند:** احساس‌ها از `emotions()` و چرخش‌ها از `turn()` می‌گذرند. وسیله‌ها روی قوس وارد و خارج می‌شوند، هرگز یکهو ظاهر نمی‌شوند.
+
+### ۷. یک اثر واحد: یک تصویر ذهنی قبل از هر کدی
+
+- **اول استوری‌بورد**، به‌صورت نوشته، قبل از نوشتن هر کدِ صحنه (قالبش در روند کاری آمده). اگر با کسی کار می‌کنی، استوری‌بورد را نشانش بده و بگذار نظر بدهد، بعد بساز.
+- **یک دنیا.** یک پالت و یک فضا انتخاب کن که در کل ویدیو ادامه پیدا کند، با یک قوسِ رنگی در طول ویدیو (مثلاً شبِ سرد ← طلوعِ گرم، هم‌پای بهتر شدنِ حال کاراکتر؛ برای فردا: «امروزِ» تاریک ← «فردای» روشن).
+- **یک رشته.** داستان آغاز، میانه و پایان دارد، و قوس احساسیِ کاراکتر دنبالش می‌کند. کلیدهای احساس را برای کل ویدیو برنامه‌ریزی کن، نه شات به شات.
+- **پایان را با آغاز هم‌قافیه کن:** همان مکان، ژست یا نقش‌مایه، ولی تغییرکرده. فیلم را کامل حس‌پذیر می‌کند.
+- **صحنه‌ها را به هم وصل کن:** حرکت از روی برش‌ها ادامه پیدا می‌کند و جهت صفحه ثابت می‌ماند (اگر فردی به سمت چپ می‌رود، به چپ رفتن ادامه دهد). وسیله‌ها و کاراکترها منتقل می‌شوند.
+
+---
+
+## اصول انیمیشن
+
+این‌ها اصول کلاسیک انیمیشن کاراکتر هستند، آن‌طور که اینجا به کار می‌آیند. بیشترشان یک مشکل را حل می‌کنند: حرکتی که با کد نوشته شود ماشینی درمی‌آید، چون کد همه‌ی بخش‌ها را همزمان، روی یک منحنی و به یک اندازه حرکت می‌دهد.
+
+- **پیش‌بینی (Anticipation).** قبل از یک حرکت بزرگ، حرکت کوچکی در جهت مخالف بکن: خم شدن قبل از پرش، عقب بردنِ دست قبل از پرتاب، تنگ کردن چشم قبل از take. به بیننده می‌گوید چیزی در راه است و کجا را نگاه کند. `jump()` و `emotions()` آن را در خود دارند.
+- **فشردن و کشیدن (Squash and stretch).** بدن‌ها هنگام برخورد فشرده و هنگام حرکت سریع کشیده می‌شوند و حجمشان را حفظ می‌کنند (`sq`).
+- **آهسته شروع، آهسته پایان (Slow in, slow out).** تقریباً هیچ‌چیز با سرعت ثابت حرکت نمی‌کند. چیزها آرام از یک ژست بیرون می‌آیند و آرام در ژست بعد می‌نشینند. یک `lerp` ساده روی زمان ماشینی به نظر می‌رسد، پس پیشرفتش را از یک easing بگذران (`ease`، `easeIn`، `easeOut`، `backOut`).
+- **وزن.** نحوه‌ی شروع و توقف یک چیز می‌گوید چقدر وزن دارد. چیزهای سنگین دیرتر راه می‌افتند و دیرتر می‌ایستند و با جهش کمی فرود می‌آیند. چیزهای سبک سریع راه می‌افتند، بالا و پایین می‌پرند و با لرزش آرام می‌گیرند.
+- **قوس‌ها.** موجودات زنده روی قوس حرکت می‌کنند، نه خط راست: وسیله‌های پرتاب‌شده، پرش‌ها، تاب خوردن دست، چرخاندن سر (`arcPt`).
+- **حرکت هم‌پوشان و ادامه‌ی حرکت (Follow-through).** همه‌ی بخش‌ها را با هم حرکت نده. چشم‌ها جلو می‌روند، بدن دنبالشان می‌آید، و دست‌ها، کلاه‌ها (منگوله‌ی کلاه فردی!)، وسیله‌ها و دم‌ها عقب می‌مانند، از حد می‌گذرند و آخر از همه آرام می‌گیرند. زمان هر بخش را کمی نسبت به بخشی که به آن آویزان است جابه‌جا کن (`spring`، `ring` و `backOut` برای نشستن).
+- **از دوقلو شدن پرهیز کن.** کد مقدارها را کپی می‌کند، پس هر دو دست با یک زاویه، هر دو چشم با هم پلک و یک جمعیت هماهنگ بالا و پایین می‌پرند. کنش را به یک دست بده و به دیگری چیز کوچک‌تری، و زمان‌ها، فازها و `seed`ها را بین کاراکترها جابه‌جا کن.
+- **اغراق.** ژست‌ها، takeها، فشردگی و خم شدن‌ها را از حدِ طبیعی جلوتر ببر. در کارتون کوتاه، ظریف یعنی هیچ. اگر روی برگه زیادی به نظر رسید، کمی برگردان.
+- **ژست‌های کلیدیِ قوی.** ژست‌های داستان‌گوی هر شات باید به‌صورت تصویر ثابت خوانده شوند، با سایه‌نمای واضح و بدنی که به سمت کاری که می‌کند خم شده، قبل از اینکه حرکتی بینشان برود. اگر ژست‌های کلیدی خوانده نشوند، حرکت درستشان نمی‌کند.
+- **فکر را نشان بده.** کاراکتر متوجه می‌شود، فکر می‌کند، بعد عمل می‌کند، و چشم‌ها اول حرکت می‌کنند. بیننده وقتی یک انتخاب را می‌فهمد که ببیند دارد انجام می‌شود.
+- **کنش فرعی.** کنش‌های کوچکی که کنش اصلی را پشتیبانی می‌کنند (بالا و پایین رفتنِ کلاه، ظاهر شدن یک emote، تکان خوردن علف) زندگی اضافه می‌کنند، ولی هرگز با آن رقابت نمی‌کنند.
+
+---
+
+## روند کاری
+
+### ۱. استوری‌بورد
+
+قبل از هر کدِ صحنه، `STORYBOARD.md` را بنویس (نمونه‌ی ویدیوی معرفی آموزشگاه در همین مخزن هست):
 
 ```
-Logline: one sentence. Clawd wants ___, but ___, so ___.
-World: setting, a small palette, light, how the colour changes across the video.
-Motif: the thing that recurs and pays off.
-Clawd's arc: the emotion keys across the whole video.
-Shots:
-  A  start–end  [transition in: ___]  what's seen · the EVENT · Clawd's reaction · camera
-     reads:  start–end  the first thing the viewer must understand
-             start–end  the next one (where is the viewer's eye when it starts?)
-             ...
-  B  start–end  [transition: ___]  ...
+لاگ‌لاین: یک جمله. فردی می‌خواهد ___، ولی ___، پس ___.
+دنیا: فضا، یک پالت کوچک، نور، اینکه رنگ در طول ویدیو چطور عوض می‌شود.
+موتیف: چیزی که تکرار می‌شود و نتیجه می‌دهد.
+قوس فردی: کلیدهای احساس در کل ویدیو.
+شات‌ها:
+  A  شروع–پایان  [گذار ورود: ___]  چه دیده می‌شود · رویداد · واکنش فردی · دوربین
+     خوانش‌ها:  شروع–پایان  اولین چیزی که بیننده باید بفهمد
+                شروع–پایان  بعدی (وقتی شروع می‌شود چشم بیننده کجاست؟)
+                ...
+  B  شروع–پایان  [گذار: ___]  ...
   ...
-  [transition out: ___]
+  [گذار خروج: ___]
+متن: کدام متن‌ها، کجا، کی (قانون ۲).
 ```
 
-The reads are the timing sheet. Give each one a start and an end, make sure each has time to be found and understood, and make sure no two important reads overlap. If a shot's reads don't fit its length, lengthen the shot or cut a read; don't squeeze them.
+خوانش‌ها برگه‌ی زمان‌بندی‌اند. به هر کدام شروع و پایان بده، مطمئن شو هر کدام وقت دارد تا پیدا و فهمیده شود، و هیچ دو خوانشِ مهمی روی هم نیفتند. اگر خوانش‌های یک شات در طولش جا نمی‌شوند، شات را بلندتر کن یا یک خوانش را حذف کن؛ فشرده‌شان نکن.
 
-Check the storyboard against the rules:
-- Is there an event in every shot?
-- Does every read have time to land before the next one starts?
-- Is there a transition at every seam?
-- Is there any text anywhere?
-- Does the ending rhyme with the opening?
+استوری‌بورد را با قانون‌ها بسنج:
+- آیا در هر شات رویدادی هست؟
+- آیا هر خوانش قبل از شروع بعدی وقت دارد جا بیفتد؟
+- آیا هر درز گذار دارد؟
+- آیا متنی هست که داستان را تکرار کند یا بیش از حد باشد؟
+- آیا پایان با آغاز هم‌قافیه است؟
 
-### 2. Build
+### ۲. ساختن
 
-- Set `duration` (and `bpm`) in [src/config.js](src/config.js).
-- Put your scene in a new file (e.g. `src/scenes/my_video.js`), wrapped in an IIFE, and end it with `shots([...])`. In [studio.html](studio.html), **replace** the `demo.js` script tag with yours.
-- Build and check one shot at a time, in order.
-- Within a shot, block the key poses first and check them as stills (`--sheet` at the key times). Add the motion between them once they read.
+- `duration` (و `bpm`) را در [src/config.js](src/config.js) تنظیم کن.
+- صحنه‌ات را در یک فایل تازه بگذار (مثلاً `src/scenes/my_video.js`)، داخل یک IIFE، و با `shots([...])` تمامش کن. در [studio.html](studio.html) تگِ اسکریپتِ صحنه‌ی فعلی (`farda_intro.js`) را با فایل خودت **جایگزین** کن.
+- هر شات را یکی‌یکی و به ترتیب بساز و بررسی کن.
+- درون یک شات، اول ژست‌های کلیدی را بچین و به‌صورت تصویر ثابت بررسی کن (`--sheet` در زمان‌های کلیدی). وقتی خوانده شدند، حرکت بینشان را اضافه کن.
 
 ```js
 // src/scenes/my_video.js
 (() => {
-  function park(t, lt, dur) {                        // t = video time, lt = time in this shot, dur = shot length
-    camBegin(960 + 20 * Math.sin(lt * .6), 540, 1 + .02 * lt);   // slow drift and push: the camera is never dead
-    paint(rectPts(-200, -200, W + 400, H + 400), { wash: PAL.sky, ink: null });           // background
-    paint(ellPts(960, 1150, 1400, 380, 40, 2), { wash: PAL.sap, ink: PAL.ink, sw: 1 });   // ground
-    const mood = emotions(lt, [[0, 'bored'], [1.2, 'surprised'], [1.7, 'excited']]);      // acted changes
-    const hop = jump(lt, 2.2, 2.7, 3);                                                    // add poses that share fields
-    clawd(960, 860, 26, { ...mood, dy: mood.dy + hop.dy, sq: mood.sq + hop.sq });
-    const at = toScreen(960, 860 - 4 * 26);          // Clawd's screen position, for the iris
+  function park(t, lt, dur) {                        // t = زمان ویدیو، lt = زمان درون این شات، dur = طول شات
+    camBegin(960 + 20 * Math.sin(lt * .6), 540, 1 + .02 * lt);   // شناوری و جلو رفتن آرام: دوربین هرگز مرده نیست
+    paint(rectPts(-200, -200, W + 400, H + 400), { wash: PAL.deep, ink: null });            // پس‌زمینه
+    paint(ellPts(960, 1150, 1400, 380, 40, 2), { wash: PAL.cosmos, ink: PAL.ink, sw: 1 });  // زمین
+    const mood = fardiEmotions(lt, [[0, 'bored'], [1.2, 'surprised'], [1.7, 'excited']]);  // تغییرهای بازی‌شده
+    const hop = jump(lt, 2.2, 2.7, 3);                                                     // ژست‌هایی که فیلد مشترک دارند را جمع کن
+    fardi(960, 860, 26, { ...mood, dy: mood.dy + hop.dy, sq: mood.sq + hop.sq });
+    const at = toScreen(960, 860 - 4 * 26);          // جای فردی روی صفحه، برای آیریس
     camEnd();
-    if (lt < .45) iris(...at, lerp(0, 1500, easeIn(lt / .45)));            // transition in
-    if (lt > dur - .3) brushWipe((lt - (dur - .3)) / .6);                 // transition out (next shot finishes it)
+    if (lt < .45) iris(...at, lerp(0, 1500, easeIn(lt / .45)));            // گذار ورود
+    if (lt > dur - .3) brushWipe((lt - (dur - .3)) / .6, [PAL.cosmos, PAL.brand]);   // گذار خروج (شات بعد تمامش می‌کند)
   }
   shots([[0, park] /*, [3.5, nextShot], ... */]);
 })();
 ```
 
-### 3. Look at it: the review loop
+### ۳. نگاهش کن: حلقه‌ی بازبینی
 
-You can't see motion by reading code. Render and look at every shot, several times, at three zoom levels:
+با خواندن کد نمی‌شود حرکت را دید. هر شات را رندر کن و چند بار، در سه سطح بزرگ‌نمایی، نگاهش کن:
 
 ```bash
-# contact sheet: the shape of the whole piece (every shot's first, middle and last frames)
+# برگه‌ی تماس: شکلِ کل اثر (فریم اول، وسط و آخرِ هر شات)
 node render.mjs --sheet=0.1,0.8,1.6,2.4,3.1,3.9 --cols=6 --w=320 --out=out/check/sheet.jpg
-# strip: EVERY frame of a moment (turns, takes, jumps, throws, transitions)
+# نوار: همه‌ی فریم‌های یک لحظه (چرخش‌ها، takeها، پرش‌ها، پرتاب‌ها، گذارها)
 node render.mjs --strip=2.1:2.6 --cols=6 --w=320 --out=out/check/strip.jpg
-# crop: full-resolution detail (faces, hands, contacts, glows); crop=x,y,w,h in frame pixels
+# برش: جزئیات با وضوح کامل (صورت‌ها، دست‌ها، تماس‌ها، هاله‌ها)؛ crop=x,y,w,h به پیکسل فریم
 node render.mjs --sheet=2.3,2.4 --crop=760,420,500,400 --w=500 --out=out/check/face.jpg
-# crop-at: the same, following a WORLD point through each frame's camera (a foot or a prop on a moving shot);
-# x,y in world pixels (or an expression evaluated in the page), w,h in frame pixels
+# crop-at: همان، ولی یک نقطه‌ی جهان را از میان دوربینِ هر فریم دنبال می‌کند (یک پا یا یک وسیله در شات متحرک)
 node render.mjs --strip=2.1:2.6 --crop-at=960,700,500,400 --out=out/check/feet.jpg
 ```
 
-Open each image and actually look at it. Check:
+**بدون کارت گرافیک؟** دو پرچم اضافه کن: `--soft-gl` (WebGL نرم‌افزاری) و `--lite` (رنگ تخت و نیمه‌شفاف به جای پرکردن آبرنگی). بدون این دو، هر فریم در WebGL نرم‌افزاری حدود یک دقیقه طول می‌کشد؛ با `--lite` چند ثانیه. پشت پروکسی یا بدون اینترنت `--offline` هم اضافه کن تا منتظر Google Fonts نماند. نسخه‌ی نهایی را اگر کارت گرافیک داری بدون `--lite` رندر کن.
 
-- **Read:** is the event of each shot clear from its sheet alone? Is Clawd big enough, and does Clawd separate from the background?
-- **Timing.** You can't judge timing from single frames, so read it like a viewer:
-  - Render the shot as a sheet at a fixed step (every 0.1–0.15 s) and read it in order.
-  - At each frame ask: where is the viewer looking right now, and do they understand it yet?
-  - Count the frames each read gets (24 frames = 1 s). A read that flashes by in a few frames, or shares its frames with another read, will be missed.
-  - After each important moment, is there time to take it in before the next thing starts?
-- **Motion:** in strips, does every move have anticipation and follow-through? Are there any pops, jumps or snaps between frames? Do the parts move at different times, or all at once? Is anything moving at a constant speed, or mirrored left and right? Are the poses pushed far enough to read?
-- **Boil:** in a strip, each pair of frames that share a boil drawing should match except where something moves. Anything still that changes every frame needs its own `boilSeed()`.
-- **Contacts:** do feet touch the ground? Do held things touch the arm tips? Do thrown things leave from the hand?
-- **Transitions:** check the first and last 0.5 s of every shot and every seam. Does it open and close with a transition?
-- **Rules:** is there any text? Is there any 3D? Is there any dead stretch where nothing is happening?
-- **Colour:** any muddy glows (use `glow()`), pure black or pure white?
+هر تصویر را باز کن و واقعاً نگاهش کن. بررسی کن:
 
-Fix what you find, then look again. **Budget:** at least one sheet per shot, a strip for every key motion and transition, and a crop for every face that carries the story. Contact sheets run about 0.1–1 s per frame, so this is cheap: don't skip it.
+- **خوانش:** آیا رویدادِ هر شات فقط از برگه‌اش معلوم است؟ کاراکتر به اندازه‌ی کافی بزرگ است و از پس‌زمینه جدا می‌شود؟
+- **زمان‌بندی.** زمان‌بندی را از تک‌فریم‌ها نمی‌شود قضاوت کرد، پس مثل بیننده بخوانش:
+  - شات را به‌صورت برگه با گام ثابت (هر ۰٫۱ تا ۰٫۱۵ ثانیه) رندر کن و به ترتیب بخوان.
+  - در هر فریم بپرس: الان بیننده کجا را نگاه می‌کند، و آیا هنوز فهمیده؟
+  - فریم‌های هر خوانش را بشمار (۲۴ فریم = ۱ ثانیه). خوانشی که در چند فریم رد می‌شود، یا فریم‌هایش را با خوانش دیگری شریک است، از دست می‌رود.
+  - بعد از هر لحظه‌ی مهم، آیا وقتی برای جذبش هست قبل از شروع چیز بعدی؟
+- **حرکت:** در نوارها، آیا هر حرکت پیش‌بینی و ادامه دارد؟ پرش، جهش یا ضربه‌ی ناگهانی بین فریم‌ها هست؟ بخش‌ها در زمان‌های متفاوت حرکت می‌کنند یا همه با هم؟ چیزی با سرعت ثابت یا قرینه‌ی چپ و راست حرکت می‌کند؟ ژست‌ها به اندازه‌ی کافی اغراق شده‌اند؟
+- **جوشیدن:** در یک نوار، هر جفت فریمی که یک نقاشیِ جوش مشترک دارند باید جز در جای حرکت یکسان باشند. هر چیز ساکنی که هر فریم عوض می‌شود `boilSeed()` خودش را لازم دارد.
+- **تماس‌ها:** پاها زمین را لمس می‌کنند؟ چیزهای در دست به نوک دست می‌رسند؟ چیزهای پرتاب‌شده از دست جدا می‌شوند؟
+- **گذارها:** نیم‌ثانیه‌ی اول و آخرِ هر شات و هر درز را بررسی کن. آیا با گذار باز و بسته می‌شود؟
+- **قانون‌ها:** متن زیادی هست؟ سه‌بعدی هست؟ بخش مرده‌ای هست که در آن هیچ اتفاقی نیفتد؟
+- **رنگ:** هاله‌ی گل‌آلود (از `glow()` استفاده کن)، سیاه یا سفید خالص؟
+- **متن فارسی:** حروف درست به هم چسبیده‌اند؟ از راست نوشته می‌شود؟ به اندازه‌ی کافی روی صفحه می‌ماند تا خوانده شود؟
 
-### 4. Render
+آنچه پیدا کردی را درست کن و دوباره نگاه کن. **بودجه:** دست‌کم یک برگه برای هر شات، یک نوار برای هر حرکت کلیدی و هر گذار، و یک برش برای هر صورتی که داستان را حمل می‌کند. برگه‌های تماس ارزان‌اند: از آن نگذر.
+
+### ۴. رندر
 
 ```bash
-node render.mjs --clip --out=out/video.mp4                      # the whole video, straight to MP4
-node render.mjs --frames --workers=4                            # or: parallel + resumable JPEG frames into out/frames …
-node render.mjs --encode --out=out/video.mp4                    # … then encode them
+node render.mjs --clip --out=out/video.mp4                      # کل ویدیو، مستقیم به MP4
+node render.mjs --frames --workers=4                            # یا: فریم‌های JPEG موازی و قابل‌ادامه در out/frames …
+node render.mjs --encode --out=out/video.mp4                    # … و بعد کدگذاری‌شان
 ```
 
 ---
 
-## Engine
+## موتور
 
-### Files
+### فایل‌ها
 
-| file | what's in it |
+| فایل | محتوا |
 |---|---|
 | `src/config.js` | `PROJECT = { duration, bpm, offset, audio? }` |
-| `src/core.js` | canvas, palette, timing and motion helpers, `paint()`, camera, full-frame effects, `glow()`, lettering, paper, render hooks |
-| `src/clawd.js` | Clawd: views, emotions, eyes, mouths, hats, emotes, moves |
-| `src/timeline.js` | `shots()`, `LOOPS`, `brushWipe()` |
-| `src/sheets.js` | the model sheets as loops (`?loop=emotions`, `?loop=views`) |
-| `src/scenes/demo.js` | an 11-second example. **Don't copy it** (see the end of this guide) |
-| `studio.html` | open it in Chrome to scrub the video (`?t=2.5` jumps to a time, `?loop=emotions` shows a loop) |
-| `render.mjs` | headless renderer: sheets, strips, crops, stills, PNG loops, MP4 |
+| `src/core.js` | بوم، پالت (به‌علاوه‌ی رنگ‌های برند فردا)، توابع زمان و حرکت، `paint()`، حالت `LITE`، دوربین، جلوه‌های تمام‌قاب، `glow()`، نوشتار (با پشتیبانی فارسی)، کاغذ، قلاب‌های رندر |
+| `src/clawd.js` | Clawd (و ریگِ مشترک همه‌ی کاراکترهای مکعبی): نماها، احساس‌ها، چشم‌ها، دهان‌ها، کلاه‌ها، عینک، emoteها، حرکت‌ها |
+| `src/fardi.js` | فردی، نماد آموزشگاه فردا، و برگه‌ی مدلش (`?loop=fardi`) |
+| `src/timeline.js` | `shots()`، `LOOPS`، `brushWipe()` |
+| `src/sheets.js` | برگه‌های مدلِ Clawd به‌صورت حلقه (`?loop=emotions`، `?loop=views`) |
+| `src/scenes/farda_intro.js` | ویدیوی ۲۴ ثانیه‌ای معرفی آموزشگاه («از امروز به فردا بیایید») |
+| `src/scenes/demo.js` | دموی ۱۱ ثانیه‌ایِ کیت اصلی («ستاره‌ی افتاده») |
+| `studio.html` | در Chrome بازش کن تا ویدیو را جلو و عقب ببری (`?t=2.5` به یک زمان می‌پرد، `?loop=fardi` یک حلقه را نشان می‌دهد، `?lite` حالت سبک) |
+| `render.mjs` | رندرکننده‌ی بدون‌رابط: برگه‌ها، نوارها، برش‌ها، تصویرهای ثابت، حلقه‌های PNG، MP4 |
 
-### Frames are pure functions of time
+### فریم‌ها تابع خالصِ زمان‌اند
 
-- **Frames render in parallel and out of order.** A shot is `fn(t, lt, dur)` and must draw the same frame for the same `t`, every time. No state carried between frames, no counters, no `Math.random()`, no physics that integrates frame by frame. Compute everything from `t`, in closed form (the helpers below do this for you).
-- Randomness: `hash(i)` for stable per-object values, and `jit(a)`/`random()` for boil (they change 12 times a second).
-- **Seed each element with `boilSeed(key)`.** Each boil drawing holds for two frames, so anything that isn't moving must draw the same in both. But a moving thing uses a different amount of randomness each frame, which shifts the stream for everything drawn after it, and all of that re-boils every frame and looks jittery.
-  - `boilSeed(key)` restarts the stream from the boil frame and a key that stays the same every frame (any string or number, unique within the frame).
-  - Call it before each separate element: each background layer, prop and effect.
-  - `clawd()` seeds itself and each of its parts, then reseeds when it's done, so nothing drawn after it depends on its pose. Its key is its call order; set `boilKey` if characters come and go mid-shot.
-- **Each shot paints the whole frame,** background included. The paper texture is under everything and the grain is multiplied over the top, so leaving paper showing is a valid look.
-- **Canvas:** 1920×1080, origin top-left, y down.
-- `LOOPS.name = t => {...}; LOOPS.name.len = 4;` makes a standalone loop (tests, GIFs, sheets), rendered with `--loop=name`.
+- **فریم‌ها موازی و بی‌ترتیب رندر می‌شوند.** یک شات `fn(t, lt, dur)` است و باید برای یک `t` همیشه همان فریم را بکشد. هیچ وضعیتی بین فریم‌ها منتقل نمی‌شود: نه شمارنده، نه `Math.random()`، نه فیزیکی که فریم به فریم انتگرال بگیرد. همه‌چیز را از `t` و به شکل بسته حساب کن (توابع کمکی پایین این کار را برایت می‌کنند).
+- تصادف: `hash(i)` برای مقدارهای پایدارِ هر شیء، و `jit(a)`/`random()` برای جوشیدن (۱۲ بار در ثانیه عوض می‌شوند).
+- **به هر عنصر با `boilSeed(key)` بذر بده.** هر نقاشیِ جوش دو فریم می‌ماند، پس هر چیزی که حرکت نمی‌کند باید در هر دو یکسان کشیده شود. ولی یک چیزِ متحرک هر فریم مقدار متفاوتی تصادف مصرف می‌کند، که جریان را برای هر چه بعد از آن کشیده شود جابه‌جا می‌کند، و همه‌ی آن‌ها هر فریم دوباره می‌جوشند و لرزان به نظر می‌رسند.
+  - `boilSeed(key)` جریان را از فریمِ جوش و یک کلید که هر فریم ثابت است از نو شروع می‌کند (هر رشته یا عدد، یکتا در فریم).
+  - قبل از هر عنصر جدا صدایش کن: هر لایه‌ی پس‌زمینه، هر وسیله و هر جلوه.
+  - `clawd()` (و `fardi()`) به خودش و هر بخشش بذر می‌دهد و در پایان دوباره بذر می‌دهد، پس هیچ چیزی که بعد از آن کشیده شود به ژستش وابسته نیست. کلیدش ترتیب صدا زدن است؛ اگر کاراکترها وسط شات می‌آیند و می‌روند `boilKey` بده.
+- **هر شات کل قاب را نقاشی می‌کند**، پس‌زمینه هم. بافت کاغذ زیر همه‌چیز است و دانه‌ی کاغذ روی همه ضرب می‌شود، پس کاغذِ پیدا ظاهر قابل قبولی است.
+- **بوم:** ۱۹۲۰×۱۰۸۰، مبدأ بالا-چپ، y رو به پایین.
+- `LOOPS.name = t => {...}; LOOPS.name.len = 4;` یک حلقه‌ی مستقل می‌سازد (آزمایش، GIF، برگه)، که با `--loop=name` رندر می‌شود.
 
-### Painting
+### نقاشی
 
-`paint(pts, o)` paints one shape from a point list `[[x, y], ...]`:
+`paint(pts, o)` یک شکل را از فهرست نقطه‌ها `[[x, y], ...]` نقاشی می‌کند:
 
-| option | meaning |
+| گزینه | معنا |
 |---|---|
-| `wash, washOp` | flat colour (opacity 0–255, default 255). For characters, props, anything solid. |
-| `fill, fillOp, bleed, tex, border` | watercolour fill with bleeding edges and pigment texture. For skies, hills, shading and shadows. `bleed` ~.05–.3, `tex` ~.3–.9. |
-| `hatch: { d, a, o, b, c, w }` | hatching (distance, angle, `{rand, gradient}`, brush e.g. `'charcoal'`/`'HB'`, colour, weight). Texture, sparingly. |
-| `ink, sw, br` | outline colour (default `PAL.ink`), weight (~.4–2), brush. **`ink: null` means no outline.** |
-| `curv` | 0–1: smooth the outline through the points. |
+| `wash, washOp` | رنگ تخت (کدری ۰ تا ۲۵۵، پیش‌فرض ۲۵۵). برای کاراکترها، وسیله‌ها، هر چیز جامد. |
+| `fill, fillOp, bleed, tex, border` | پرکردن آبرنگی با لبه‌های نشت‌کرده و بافت رنگدانه. برای آسمان، تپه، سایه‌روشن و سایه. `bleed` حدود ۰٫۰۵ تا ۰٫۳، `tex` حدود ۰٫۳ تا ۰٫۹. در حالت `LITE` به رنگ تختِ نیمه‌شفاف تبدیل می‌شود. |
+| `hatch: { d, a, o, b, c, w }` | هاشور (فاصله، زاویه، `{rand, gradient}`، قلم مثل `'charcoal'`/`'HB'`، رنگ، وزن). بافت، با احتیاط. |
+| `ink, sw, br` | رنگ دورگیری (پیش‌فرض `PAL.ink`)، وزن (~۰٫۴ تا ۲)، قلم. **`ink: null` یعنی بدون دورگیری.** |
+| `curv` | ۰ تا ۱: دورگیری را از میان نقطه‌ها صاف کن. |
 
-- **Lines:** `inkLine(pts, sw, colour, brush = 'ink', curvature)`. The kit's brushes are `'ink'`, `'inkfine'` and `'dry'` (bristly). p5.brush's built-ins also work: `'2B'`, `'HB'`, `'charcoal'`, `'marker'`, `'pen'`, `'cpencil'`, `'rotring'`, `'spray'`.
-- **Shapes:**
+- **خط‌ها:** `inkLine(pts, sw, colour, brush = 'ink', curvature)`. قلم‌های کیت `'ink'`، `'inkfine'` و `'dry'` (زبر) هستند. قلم‌های داخلی p5.brush هم کار می‌کنند: `'2B'`، `'HB'`، `'charcoal'`، `'marker'`، `'pen'`، `'cpencil'`، `'rotring'`، `'spray'`.
+- **شکل‌ها:**
   - `rectPts(x, y, w, h, jitter)`
   - `ellPts(cx, cy, rx, ry, n, jitter, rot)`
-  - `rrPts(x, y, w, h, r, jitter)`: a rounded rectangle
+  - `rrPts(x, y, w, h, r, jitter)`: مستطیل با گوشه‌ی گرد
   - `starPts(cx, cy, r, inner, n, rot)`
   - `heartPts(cx, cy, r)`
-  - `through(P)`: a smooth curve through the points
-  - `ribbon(P, w0, w1)`: a tapered ribbon along a path, as one outline. Use it for tails, trails, vines and noodly arms.
-- **One shape, one outline.** Build a creature or prop from as few outlines as you can, so it doesn't look like glued-on stickers: a tail is one `ribbon`, not five circles.
-- **Light:** `glow(x, y, r, colour, a)`. It's additive, so it stays warm on dark grounds and barely shows on light ones (as real light would). Draw it before the things that sit in front of the light.
-- **Palette** `PAL`: `paper, ink, clay, clayDk, clayLt, night, indigo, rose, ochre, sap, teal, violet, cream, sky`. `mixCol(a, b, k)` mixes two hex colours in RGB. Any hex colour works: pick a small palette per video.
-- **p5.brush quirks:**
-  - Colours mix like pigment: yellow over blue makes green. Layer light colours over dark ones with a full-opacity `wash`, or use `glow()`.
-  - `wash` at 255 is exact colour; lower opacities mix.
-  - Strokes drawn far from the origin under a zoomed camera collapse: from zoom ~2, an outline or a line at large
-    world coordinates leaves only a dot at its first vertex. `paint()` and `inkLine()` draw each shape around its own
-    centre, which avoids it. A shape much bigger than the canvas can still lose its outline: draw long edges as
-    `inkLine`s no bigger than the canvas.
-  - Outline weight is in world units, so it grows with the camera's zoom: a fine outline on a small shape becomes a
-    dark blob in a close-up. Scale `sw` down with the zoom for small shapes.
-  - A NaN in a point list throws `Failed to construct 'OffscreenCanvas': Value is not of type 'unsigned long'`, with
-    a stack pointing at your scene rather than the NaN. Guard geometry that can degenerate (`Math.acos` of a ratio > 1).
-  - p5 `push()/pop()/translate()/rotate()/scale()` work with all brush calls.
-  - Cost is the number of `fill` shapes and strokes: hundreds are fine, thousands are not. Aim for ≤ 1.5 s per frame. The render log prints ms/frame.
-  - Some scenes make p5.brush log five `WebGL: INVALID_OPERATION ... not from the associated program` warnings once per page. They're harmless (frames come out identical). Any other page error is real.
+  - `through(P)`: منحنی صاف از میان نقطه‌ها
+  - `ribbon(P, w0, w1)`: نوارِ باریک‌شونده در طول یک مسیر، به‌صورت یک دورگیری. برای دم، ردّ حرکت، پیچک، شعله و دست‌های نرم.
+- **یک شکل، یک دورگیری.** یک موجود یا وسیله را با کمترین تعداد دورگیری بساز تا شبیه برچسب‌های چسبانده نشود: دم یک `ribbon` است، نه پنج دایره.
+- **نور:** `glow(x, y, r, colour, a)`. افزایشی است، پس روی زمینه‌ی تیره گرم می‌ماند و روی زمینه‌ی روشن کم دیده می‌شود (مثل نور واقعی). آن را قبل از چیزهایی بکش که جلوی نور قرار می‌گیرند.
+- **پالت** `PAL`: `paper, ink, clay, clayDk, clayLt, night, indigo, rose, ochre, sap, teal, violet, cream, sky` و رنگ‌های برند فردا `brand, brandDk, brandLt, cyan, cosmos, nebula, deep`. `mixCol(a, b, k)` دو رنگ hex را در RGB مخلوط می‌کند. هر رنگ hex کار می‌کند: برای هر ویدیو یک پالت کوچک انتخاب کن.
+- **ویژگی‌های p5.brush:**
+  - رنگ‌ها مثل رنگدانه مخلوط می‌شوند: زرد روی آبی سبز می‌شود. رنگ‌های روشن را با `wash` با کدریِ کامل روی تیره‌ها بگذار، یا از `glow()` استفاده کن.
+  - `wash` در ۲۵۵ رنگِ دقیق است؛ کدری‌های کمتر مخلوط می‌شوند.
+  - خط‌هایی که زیر دوربینِ بزرگ‌نمایی‌شده دور از مبدأ کشیده شوند فرو می‌ریزند: از بزرگ‌نمایی حدود ۲، دورگیری یا خط در مختصات بزرگ فقط یک نقطه در اولین رأسش باقی می‌گذارد. `paint()` و `inkLine()` هر شکل را دور مرکز خودش می‌کشند که از این جلوگیری می‌کند. شکلی خیلی بزرگ‌تر از بوم هنوز می‌تواند دورگیری‌اش را از دست بدهد: لبه‌های بلند را با `inkLine`هایی نه بزرگ‌تر از بوم بکش.
+  - وزن دورگیری به واحد جهان است، پس با بزرگ‌نمایی دوربین بزرگ می‌شود: دورگیریِ ظریف روی شکل کوچک در نمای نزدیک لکه‌ی تیره می‌شود. `sw` را برای شکل‌های کوچک متناسب با بزرگ‌نمایی کم کن.
+  - یک NaN در فهرست نقطه‌ها خطای `Failed to construct 'OffscreenCanvas': Value is not of type 'unsigned long'` می‌دهد، با ردّی که به صحنه‌ی تو اشاره می‌کند نه به NaN. هندسه‌ای که ممکن است تباهیده شود را محافظت کن (`Math.acos` نسبتی بزرگ‌تر از ۱).
+  - `push()/pop()/translate()/rotate()/scale()` در p5 با همه‌ی فراخوانی‌های قلم کار می‌کنند.
+  - هزینه، تعداد شکل‌های `fill` و خط‌هاست: صدها خوب است، هزاران نه. هدف ≤ ۱٫۵ ثانیه برای هر فریم (با کارت گرافیک). گزارش رندر ms/frame را چاپ می‌کند.
+  - در WebGL نرم‌افزاری (`--soft-gl`) کار کارت گرافیک به تعویق می‌افتد، پس حدود ۲۰ فریم اولِ هر صفحه سریع به نظر می‌رسند و بعد به سرعت واقعی (چند ثانیه در هر فریم) می‌رسند. برگه‌های کوچک سریع‌اند؛ برای برآورد زمان رندر کامل به فریم‌های بعد از بیستم نگاه کن.
+  - بعضی صحنه‌ها باعث می‌شوند p5.brush یک بار در هر صفحه پنج هشدار `WebGL: INVALID_OPERATION ... not from the associated program` چاپ کند. بی‌خطرند (فریم‌ها یکسان درمی‌آیند). هر خطای دیگری در صفحه واقعی است.
 
-### Time and motion (all pure functions of t)
+### زمان و حرکت (همه تابع خالصِ t)
 
-- **Progress and keys:**
-  - `seg(t, a, b)`: 0..1 progress through [a, b]
-  - `kf(t, [[t0, v0], [t1, v1], ...], ease)`: keyframes; values may be arrays
-  - `lerp`, `clamp`, `frac`, `wob(t, freq, phase)`, `TAU`
-- **Easing:** `ease`, `easeIn`, `easeOut`, `backOut` (overshoot) and `elasticOut`.
-- **Rhythm:** `BEAT` (seconds per beat), `bpOf(t)` (beat position), `beatN(t)` (beat number), and `pulse(t, k)` / `pulse2(t, k)`, which are 1 on each beat (or eighth) and then decay.
-- **Acting:**
-  - `jump(t, t0, t1, h)`: crouch, stretch, arc and squash-land. Returns `{dy, sq}`.
-  - `take(t, t0, amt)`: a surprise take, returns `{sq, dy}`.
-  - `stroll(t, t0, t1, x0, x1, u)`: an eased walk. Returns `{x, walk, view, flip, dy}`.
-  - `spring(t, t0, k, w)`: a damped wobble after an event, for settles and follow-through.
-  - `ring(t, [t0, t1, ...])`: one `spring` kick per event time.
-  - `arcPt(p0, p1, h, k)`: a point on a thrown arc.
-  - `onTwos(t)`: holds each drawing for two frames. Wrap a shot's `t` in it for a snappier, hand-drawn feel.
-- **Camera:**
-  - `camBegin(cx, cy, zoom, rot)` … `camEnd()`: world point (cx, cy) lands at screen centre. One level only; always pair them.
-  - `toScreen(x, y)`: world → screen while a camera is active. Use it to aim an iris at a character.
-  - `shakeXY(t, amount)`: [dx, dy] to add to the camera on impacts.
-- **Full-frame effects** (screen space, after `camEnd()`):
-  - `brushWipe(p, [c1, c2])`: fat strokes cover the frame (p 0 → .5) and then drag off (.5 → 1). Cut under full cover. Its comment in timeline.js shows the two calls.
-  - `iris(cx, cy, r, colour)` and `irisShape(pts, colour)`: shaped reveals.
-  - `flash(k, colour)`: a full-frame flash.
-- **Lettering** (only if you must, see "No text"):
-  - `letter(txt, x, y, size, colour, {pop, rot, alpha, screen})`
-  - `sfx(txt, x, y, size, colour, age)`
-  - Both are composited at `flushLetters()`, after the shot. If a wipe or iris must cover them, call it yourself first.
+- **پیشرفت و کلیدها:**
+  - `seg(t, a, b)`: پیشرفت ۰ تا ۱ در بازه‌ی [a, b]
+  - `kf(t, [[t0, v0], [t1, v1], ...], ease)`: کلیدفریم؛ مقدارها می‌توانند آرایه باشند
+  - `lerp`، `clamp`، `frac`، `wob(t, freq, phase)`، `TAU`
+- **easing:** `ease`، `easeIn`، `easeOut`، `backOut` (فراجهش) و `elasticOut`.
+- **ریتم:** `BEAT` (ثانیه در هر ضرب)، `bpOf(t)` (موقعیت ضرب)، `beatN(t)` (شماره‌ی ضرب)، و `pulse(t, k)` / `pulse2(t, k)` که روی هر ضرب (یا هشتم) ۱ هستند و بعد میرا می‌شوند.
+- **بازیگری:**
+  - `jump(t, t0, t1, h)`: خم شدن، کشیده شدن، قوس و فرود با فشردگی. `{dy, sq}` برمی‌گرداند.
+  - `take(t, t0, amt)`: take غافلگیری، `{sq, dy}` برمی‌گرداند.
+  - `stroll(t, t0, t1, x0, x1, u)`: راه رفتنِ نرم. `{x, walk, view, flip, dy}` برمی‌گرداند.
+  - `spring(t, t0, k, w)`: لرزش میرا بعد از یک رویداد، برای نشستن و ادامه‌ی حرکت.
+  - `ring(t, [t0, t1, ...])`: یک ضربه‌ی `spring` برای هر زمانِ رویداد.
+  - `arcPt(p0, p1, h, k)`: نقطه‌ای روی قوسِ پرتاب.
+  - `onTwos(t)`: هر نقاشی را دو فریم نگه می‌دارد. `t` شات را در آن بپیچ برای حسِ تندتر و دستی‌تر.
+- **دوربین:**
+  - `camBegin(cx, cy, zoom, rot)` … `camEnd()`: نقطه‌ی جهان (cx, cy) در مرکز صفحه می‌نشیند. فقط یک سطح؛ همیشه جفتشان کن.
+  - `toScreen(x, y)`: جهان ← صفحه وقتی دوربین فعال است. برای نشانه‌گیری آیریس روی کاراکتر.
+  - `shakeXY(t, amount)`: [dx, dy] برای اضافه کردن به دوربین هنگام برخورد.
+- **جلوه‌های تمام‌قاب** (فضای صفحه، بعد از `camEnd()`):
+  - `brushWipe(p, [c1, c2])`: ضربه‌های پهن قاب را می‌پوشانند (p از ۰ تا ۰٫۵) و بعد کنار می‌روند (۰٫۵ تا ۱). زیر پوششِ کامل ببر. توضیحش در timeline.js دو فراخوانی را نشان می‌دهد. برای فردا: `[PAL.cosmos, PAL.brand]`.
+  - `iris(cx, cy, r, colour)` و `irisShape(pts, colour)`: آشکارسازی‌های شکل‌دار.
+  - `flash(k, colour)`: فلشِ تمام‌قاب (یا محو شدن به یک رنگ).
+- **نوشتار** (قانون ۲ را ببین):
+  - `letter(txt, x, y, size, colour, {pop, rot, alpha, screen, reveal, weight, align, stroke})`
+  - متنی که حروف فارسی دارد خودکار راست‌به‌چپ و با وزیرمتن (وزن پیش‌فرض ۸۰۰، با `weight` عوضش کن) چیده می‌شود و مرورگر حروف را به هم می‌چسباند.
+  - `reveal` از ۰ تا ۱ متن را از ابتدای خواندنش (راست برای فارسی) می‌نویسد.
+  - `stroke` یک دورگیریِ پهن به رنگ داده‌شده دور حروف می‌کشد (برای خوانایی روی آسمان).
+  - `sfx(txt, x, y, size, colour, age)`: افکت صوتی کمیک (برای متن انگلیسی).
+  - هر دو در `flushLetters()` بعد از شات ترکیب می‌شوند. `brushWipe()` و `iris()` خودشان اول نوشته‌ها را ترکیب می‌کنند تا زیر گذار بروند؛ برای پوشش‌های دیگر (مثل `flash()`) اول خودت `flushLetters()` را صدا بزن.
+
+---
+
+## فردی
+
+فردی نماد آموزشگاه فرداست: یک مکعب فیروزه‌ای (رنگ تأکیدِ سایت، `FARDI.col`) با عینک گرد (معلم) و کلاه فارغ‌التحصیلیِ سرمه‌ای با منگوله‌ی طلایی (دانش‌آموز). روی ریگِ Clawd ساخته شده، پس همه‌ی نماها، احساس‌ها، دست‌ها، پاها و قلاب‌ها دقیقاً مثل Clawd کار می‌کنند. رنگ فیروزه‌ای عمداً انتخاب شده: هم روی شب‌های نیلی و هم روی طلوع‌های گرم خوانده می‌شود.
+
+```js
+fardi(x, y, u, options)   // (x, y) = نقطه‌ی زمین بین پاها؛ u = واحد اندازه. همه‌ی گزینه‌های clawd() کار می‌کنند
+fardi(x, y, 24, fardiEmotions(t, [[0, 'thinking'], [1.2, 'idea']]))     // تغییر احساسِ بازی‌شده، با رنگ‌های فردی
+fardi(x, y, 24, { ...feel('happy', t), glasses: false, hat: 'party' })   // هر گزینه پیش‌فرض‌ها را عوض می‌کند
+```
+
+- **همیشه برای فردی از `fardiEmotions()` استفاده کن، نه `emotions()`.** هنگام تغییر احساس، رنگ‌ها باید از فیروزه‌ایِ فردی محو شوند، نه از رنگ سفالیِ Clawd.
+- `glasses`: `true`، یا رنگ قاب عینک. در نیم‌رخ یک عدسی و دسته‌اش دیده می‌شود.
+- `hat: 'grad'`: کلاه فارغ‌التحصیلی. منگوله‌اش خودش تاب می‌خورد؛ `tassel` (به رادیان) تاب اضافه می‌دهد، مثلاً با `spring()` بعد از یک پرش برای ادامه‌ی حرکت.
+- رنگ‌های فردی در `FARDI` هستند (`col`، `dk`، `lt`). برای تغییر طراحی، همین‌ها و `fardi()` را در `src/fardi.js` عوض کن.
+- در یک ویدیو، فردی را روی مدل نگه دار: همان شکل و همان ویژگی‌ها در همه‌ی شات‌ها.
 
 ---
 
 ## Clawd
 
-Clawd is the Claude Code mascot: a terracotta block (`PAL.clay`), 10 units wide and 6 tall, with four stubby legs, two little arm nubs and two tall slit eyes. There's no mouth at rest. It's drawn in flat wash with an ink outline and boils like everything else. That's the default design, not a rule: change it if the idea needs it. Within one video, though, keep every character on model, with the same shape and features in every shot.
+Clawd نمادِ Claude Code است: یک مکعب سفالی (`PAL.clay`)، ۱۰ واحد پهن و ۶ واحد بلند، با چهار پای کوتاه، دو دستِ کوچک و دو چشمِ شکافیِ بلند. در حالت عادی دهان ندارد. با رنگ تخت و دورگیریِ جوهری کشیده می‌شود و مثل بقیه‌ی چیزها می‌جوشد. این طراحیِ پیش‌فرض است، نه قانون: اگر ایده لازم دارد عوضش کن. ولی در یک ویدیو هر کاراکتر را روی مدل نگه دار.
 
 ```js
-clawd(x, y, u, options)   // (x, y) = ground point between the feet; u = size unit
+clawd(x, y, u, options)   // (x, y) = نقطه‌ی زمین بین پاها؛ u = واحد اندازه
 ```
 
-**Sizes:** Clawd is 10u × 8u (legs included).
+**اندازه‌ها:** بدنه (هم Clawd و هم فردی) ۱۰u × ۸u است (با پاها). کلاه فردی حدود ۳u بالاتر می‌رود.
 
-| shot | u | on screen |
+| نما | u | روی صفحه |
 |---|---|---|
-| wide | 10–16 | small in the landscape |
-| medium | 20–28 | the usual acting size |
-| close-up | 40–70 | face acting |
-| extreme close-up | 90+ | camera pushed in on the eyes |
+| باز | ۱۰–۱۶ | کوچک در منظره |
+| متوسط | ۲۰–۲۸ | اندازه‌ی معمولِ بازیگری |
+| نزدیک | ۴۰–۷۰ | بازیِ صورت |
+| خیلی نزدیک | ۹۰+ | دوربین روی چشم‌ها |
 
-### Options
+### گزینه‌ها
 
-| group | options |
+| گروه | گزینه‌ها |
 |---|---|
-| pose | `dx`, `dy` (in u; −dy = up), `sq` (squash; negative stretches), `rot` (pivots at the feet), `flip`, `sx`, `sy`, `aL`, `aR` (arm angle: 0 = straight out, + = up, − = down; ±1.5 is vertical), `walk` (leg phase), `noLegs`, `noShadow` |
-| view | `view`: front, q, side, qback, back. `smear` 0..1 + `smearDir` ±1 (0 = both sides) for fast moves |
-| face | `eyes`, `mouth`, `lookX`/`lookY` (−1..1), `squint` 0..1, `blush` 0..1, `gloom` 0..1, `lid` 0..1, `seed` (blink timing) |
-| colour | `tint` (pale, flush, blue, rosy, green, gold, or any hex) + `tintK`, or `col`/`dk`/`lt` directly |
-| extras | `hat`, `emote` + `emoteK` (0..1 pop) + `emoteAge`, `draw(u, sw)`, `armL(u, sw)`, `armR(u, sw)` |
-| boil | `boilKey`: a stable id for its boil seeds (default: call order) |
+| ژست | `dx`، `dy` (به u؛ dy منفی = بالا)، `sq` (فشردگی؛ منفی = کشیدگی)، `rot` (حول پاها)، `flip`، `sx`، `sy`، `aL`، `aR` (زاویه‌ی دست: ۰ = مستقیم به بیرون، + = بالا، − = پایین؛ ±۱٫۵ عمودی است)، `walk` (فاز پا)، `noLegs`، `noShadow` |
+| نما | `view`: front، q، side، qback، back. `smear` ۰ تا ۱ + `smearDir` ±۱ (۰ = هر دو طرف) برای حرکت‌های سریع |
+| صورت | `eyes`، `mouth`، `lookX`/`lookY` (−۱ تا ۱)، `squint` ۰ تا ۱، `blush` ۰ تا ۱، `gloom` ۰ تا ۱، `lid` ۰ تا ۱، `seed` (زمان پلک زدن) |
+| رنگ | `tint` (pale، flush، blue، rosy، green، gold یا هر hex) + `tintK`، یا مستقیم `col`/`dk`/`lt` |
+| اضافه‌ها | `hat`، `glasses`، `tassel`، `emote` + `emoteK` (ظاهر شدن ۰ تا ۱) + `emoteAge`، `draw(u, sw)`، `armL(u, sw)`، `armR(u, sw)` |
+| جوش | `boilKey`: شناسه‌ی پایدار برای بذرهای جوشش (پیش‌فرض: ترتیب صدا زدن) |
 
-Options compose by spreading: `clawd(x, y, u, { ...feel('happy', t), ...turn(t, 1, 1.15, 0, .25), hat: 'party' })`. Later spreads win, so put the emotion first and the pose after it. If both an emotion and a pose move the same field (`dy`, `sq`), add them together rather than letting one silently replace the other.
+گزینه‌ها با spread ترکیب می‌شوند: `fardi(x, y, u, { ...feel('happy', t), ...turn(t, 1, 1.15, 0, .25) })`. spreadهای بعدی برنده‌اند، پس احساس را اول و ژست را بعد بگذار. اگر هم یک احساس و هم یک ژست یک فیلد را حرکت می‌دهند (`dy`، `sq`)، به جای اینکه یکی بی‌صدا دیگری را جایگزین کند، جمعشان کن.
 
-### Views and turns
+### نماها و چرخش‌ها
 
-These are drawn key views. Every view faces screen-right; add `flip: true` to face left.
+این‌ها نماهای کلیدیِ کشیده‌شده‌اند. همه‌ی نماها رو به راستِ صفحه‌اند؛ برای رو به چپ `flip: true` اضافه کن (در ویدیوهای فردا، «پیش رفتن» رو به چپ است).
 
-| view | what you see |
+| نما | چه دیده می‌شود |
 |---|---|
-| `front` | the face, both arms, four legs |
-| `q` | 3/4: the face shifted toward the heading, the side face as a darker strip behind it |
-| `side` | profile: one eye near the leading edge, one arm |
-| `qback` | 3/4 from behind: no face |
-| `back` | no face |
+| `front` | صورت، هر دو دست، چهار پا |
+| `q` | سه‌رخ: صورت به سمتِ جهت حرکت جابه‌جا شده، پهلو به‌صورت نوار تیره‌تر پشتش |
+| `side` | نیم‌رخ: یک چشم نزدیک لبه‌ی جلو، یک دست |
+| `qback` | سه‌رخ از پشت: بدون صورت |
+| `back` | بدون صورت |
 
-- **Turn with `turn(t, t0, t1, a0, a1)`.** Headings are in turns: 0 = front, .25 = facing right, .5 = back, −.25 = facing left. It steps through the key views over 0.12–0.25 s with smears, like a drawn turn. For a single heading, use `spinView(a)`.
-- **Walks across the screen** read best in `side` view with `walk` driving the legs. `stroll()` gives `q`; override it with `view: 'side'` for a trot.
-- **Facing right, `aL` is the near arm** (drawn in front of the body), and the far arm is behind and darker.
+- **با `turn(t, t0, t1, a0, a1)` بچرخان.** جهت‌ها به دور هستند: ۰ = رو به جلو، ۰٫۲۵ = رو به راست، ۰٫۵ = پشت، −۰٫۲۵ = رو به چپ. در ۰٫۱۲ تا ۰٫۲۵ ثانیه با smear از میان نماهای کلیدی می‌گذرد، مثل یک چرخشِ کشیده‌شده. برای یک جهت ثابت از `spinView(a)` استفاده کن.
+- **راه رفتن در عرض صفحه** در نمای `side` با `walk` که پاها را می‌راند بهتر خوانده می‌شود. `stroll()` نمای `q` می‌دهد؛ برای یورتمه با `view: 'side'` جایگزینش کن.
+- **رو به راست، `aL` دستِ نزدیک است** (جلوی بدن کشیده می‌شود)، و دستِ دور پشت و تیره‌تر است.
 
-### Emotions
+### احساس‌ها
 
-31 emotions. Each is a face, a colour and a way of moving, all locked to the beat. `feel(name, t, over)` returns all of it at time t:
+۳۱ احساس. هر کدام یک صورت، یک رنگ و یک شیوه‌ی حرکت است که همه به ضرب قفل‌اند. `feel(name, t, over)` همه‌اش را در زمان t برمی‌گرداند:
 
 ```js
-clawd(x, y, u, feel('happy', t));                                   // one emotion, alive
-clawd(x, y, u, feel('sad', t, { view: 'q', lookX: -1 }));             // with overrides
-clawd(x, y, u, emotions(t, [[0, 'sleepy'], [1.9, 'surprised', { lookX: .8 }], [2.5, 'idea']]));   // acted changes
+fardi(x, y, u, feel('happy', t));                                   // یک احساس، زنده
+fardi(x, y, u, feel('sad', t, { view: 'q', lookX: -1 }));             // با جایگزین‌ها
+fardi(x, y, u, fardiEmotions(t, [[0, 'sleepy'], [1.9, 'surprised', { lookX: .8 }], [2.5, 'idea']]));   // تغییرهای بازی‌شده
 ```
 
-| family | emotions |
+| خانواده | احساس‌ها |
 |---|---|
-| joy | happy, excited, laugh, love, proud, starstruck, playful, hopeful, relieved |
-| sly | smug, cool, mischief, suspicious |
-| low | sad, cry, bored, sleepy, ko |
-| hot | angry, furious (the lunchbox lid opens), determined, disgusted |
-| alarm | scared, nervous, surprised, confused, dizzy |
-| mind | neutral, thinking, idea, shy |
+| شادی | happy (شاد)، excited (هیجان)، laugh (خنده)، love (عشق)، proud (افتخار)، starstruck (شگفت‌زده)، playful (بازیگوش)، hopeful (امیدوار)، relieved (آسوده) |
+| زیرکی | smug (از خود راضی)، cool (باحال)، mischief (شیطنت)، suspicious (مشکوک) |
+| افت | sad (غمگین)، cry (گریه)، bored (بی‌حوصله)، sleepy (خواب‌آلود)، ko (از پا افتاده) |
+| داغ | angry (عصبانی)، furious (خشمگین؛ درِ جعبه‌ی ناهار باز می‌شود)، determined (مصمم)، disgusted (منزجر) |
+| هشدار | scared (ترسیده)، nervous (نگران)، surprised (غافلگیر)، confused (گیج)، dizzy (سرگیجه) |
+| ذهن | neutral (خنثی)، thinking (در فکر)، idea (ایده)، shy (خجالتی) |
 
-- **`emotions(t, keys)`** is how moods change in a shot. Around each key it squints and squashes just before the change (anticipation), swaps the face under the squint, and fires a take sized to the new emotion. The body then settles into the new motion with overshoot, colour cross-fades and the new emote pops in.
-  - `emotions(t, keys, { take: .5 })` scales every take.
-  - The third element of a key overrides fields for that stretch (e.g. `{ lookX: .8, emote: 'music' }`).
-- To make a new emotion, add an entry to `EMO` in clawd.js. It needs eyes, mouth, optional tint/blush/gloom/lid/emote, `take` (reaction size) and `body(t)` (its idle motion, locked to the beat through `_b(t)`).
+- **`emotions(t, keys)`** (برای فردی `fardiEmotions`) روشِ تغییر حال در یک شات است. دور هر کلید، درست قبل از تغییر چشم تنگ می‌شود و بدن فشرده (پیش‌بینی)، صورت زیر چشم‌تنگ‌کردن عوض می‌شود، و یک take به اندازه‌ی احساس تازه اجرا می‌شود. بعد بدن با فراجهش در حرکت تازه می‌نشیند، رنگ محو می‌شود و emote تازه ظاهر می‌شود.
+  - `emotions(t, keys, { take: .5 })` همه‌ی takeها را مقیاس می‌کند.
+  - عنصر سوم هر کلید فیلدها را برای همان بازه جایگزین می‌کند (مثلاً `{ lookX: .8, emote: 'music' }`).
+- برای ساختن احساس تازه، یک مدخل به `EMO` در clawd.js اضافه کن. چشم، دهان، اختیاری tint/blush/gloom/lid/emote، `take` (اندازه‌ی واکنش) و `body(t)` (حرکت بیکاری‌اش، قفل‌شده به ضرب از طریق `_b(t)`) لازم دارد.
 
-### Parts
+### اجزا
 
-- **Eyes:** normal, look, wide, happy, closed, sleepy, wink, narrow, angry, determined, sad, teary, cry, squeeze, shine, scared, blank, spark, red, heart, x, swirl, dot, shades.
-  - A pair gives mismatched eyes, e.g. `['narrow', 'wide']`.
-  - `lookX`/`lookY` aim the pupils, and `squint` closes the eyes from any shape.
-- **Mouths:** o, O, smile, grin, flat, wobble, cat, frown, smirk, laugh, open, wail, teeth, tongue, pout, yawn. Use `null` for none (Clawd's resting face).
-- **Lunchbox lid:** `lid` 0..1 hinges the top of the body open, with teeth pointing into the mouth. It's for fury, chomping and shouting, in the front view only.
-- **Hats:** party, hard, crown, halo, wizard, hood, top, fedora, band, sweatband, beanie, bow, flower, headphones, cat (ears and whiskers). Face pieces: masq, mask, bowtie.
-- **Emotes** are painted marks that pop in by the head: `!` `?` `!!` `!?` zzz, sweat, spark, heart, hearts, anger, steam, bulb, dots, scribble, music, swirl, stars, cloud.
-  - `emoteK` is the 0..1 pop and `emoteAge` drives the looping ones; `emotions()` sets both.
-  - `emote(kind, x, y, s, k, age)` draws one anywhere, for example over a prop.
-- **Body colour:**
-  - `tint` shifts it with the mood: pale (fear), flush (anger), blue (sadness), rosy (love), green (disgust), gold (pride).
-  - `gloom` adds a dark forehead with hanging lines, and `blush` adds cheeks (hatched when above .6).
+- **چشم‌ها:** normal، look، wide، happy، closed، sleepy، wink، narrow، angry، determined، sad، teary، cry، squeeze، shine، scared، blank، spark، red، heart، x، swirl، dot، shades.
+  - یک جفت چشم‌های ناهمسان می‌دهد، مثلاً `['narrow', 'wide']`.
+  - `lookX`/`lookY` مردمک‌ها را نشانه می‌گیرند و `squint` چشم‌ها را از هر شکلی می‌بندد.
+- **دهان‌ها:** o، O، smile، grin، flat، wobble، cat، frown، smirk، laugh، open، wail، teeth، tongue، pout، yawn. برای هیچ `null` (صورتِ آرام).
+- **درِ جعبه‌ی ناهار:** `lid` ۰ تا ۱ بالای بدن را باز می‌کند، با دندان‌هایی رو به دهان. برای خشم، گاز گرفتن و فریاد، فقط در نمای روبه‌رو.
+- **کلاه‌ها:** party، hard، crown، halo، wizard، hood، top، fedora، band، sweatband، beanie، bow، flower، headphones، cat (گوش و سبیل)، grad (کلاه فارغ‌التحصیلی). اجزای صورت: masq، mask، bowtie، و `glasses` (عینک گرد، گزینه‌ی جدا).
+- **emoteها** علامت‌های نقاشی‌شده‌ای هستند که کنار سر ظاهر می‌شوند: `!` `?` `!!` `!?` zzz، sweat، spark، heart، hearts، anger، steam، bulb، dots، scribble، music، swirl، stars، cloud.
+  - `emoteK` ظاهر شدنِ ۰ تا ۱ است و `emoteAge` حلقه‌ای‌ها را می‌راند؛ `emotions()` هر دو را تنظیم می‌کند.
+  - `emote(kind, x, y, s, k, age)` یکی را هر جایی می‌کشد، مثلاً روی یک وسیله.
+- **رنگ بدن:**
+  - `tint` آن را با حال عوض می‌کند: pale (ترس)، flush (خشم)، blue (غم)، rosy (عشق)، green (انزجار)، gold (غرور).
+  - `gloom` پیشانیِ تیره با خط‌های آویزان اضافه می‌کند و `blush` گونه‌ها را (بالای ۰٫۶ هاشورخورده).
 
-### Hooks: props and accessories
+### قلاب‌ها: وسیله‌ها و لوازم
 
-- **`draw(u, sw)`** paints in body-local space, on top of everything else on the body (face, hat, near arm). It squashes, flips and rotates with Clawd. Front-view coordinates:
-  - the body spans x −5u..5u and y −8u..−2u
-  - the eyes are at (±2.5u, −6u)
-  - the mouth is near (0, −4.3u)
-- **`armL(u, sw)` / `armR(u, sw)`** are called at the arm tip, in arm space (+x runs outward along the arm), so a held prop just draws around (0, 0) and follows the arm automatically:
+- **`draw(u, sw)`** در فضای محلیِ بدن و روی همه‌ی چیزهای دیگرِ بدن (صورت، کلاه، دستِ نزدیک) نقاشی می‌کند. با کاراکتر فشرده، وارونه و چرخانده می‌شود. مختصات نمای روبه‌رو:
+  - بدن در x از −۵u تا ۵u و y از −۸u تا −۲u
+  - چشم‌ها در (±۲٫۵u، −۶u)
+  - دهان نزدیک (۰، −۴٫۳u)
+- **`armL(u, sw)` / `armR(u, sw)`** در نوک دست و در فضای دست صدا زده می‌شوند (+x در امتداد دست به بیرون)، پس یک وسیله‌ی در دست فقط دور (۰، ۰) کشیده می‌شود و خودکار دنبال دست می‌رود. در ویدیوی معرفی، کتاب و چکشِ فردی این‌طور کشیده شده‌اند:
 
 ```js
-clawd(x, y, 24, { ...feel('proud', t), aR: 1.2, armR: (u, sw) => paint(starPts(u * .8, 0, u * 1.4, .5, 5), { wash: '#FFE27A', sw }) });
+fardi(x, y, 24, { ...feel('determined', t), aL: swing, armL: (u, sw) => paint(rectPts(0, -.25 * u, 2.1 * u, .5 * u), { wash: '#B98A5E', sw }) });
 ```
 
-- Anything the arms can't carry, like a big object overhead, is drawn separately at a point computed from the same pose. The demo's star does this. Make sure it touches: check it with a crop.
+- هر چیزی که دست‌ها نمی‌توانند حمل کنند، مثل یک شیء بزرگ بالای سر یا موشکی که فردی سوارش است، جدا و در نقطه‌ای که از همان ژست حساب شده کشیده می‌شود. مطمئن شو تماس دارد: با یک برش بررسی‌اش کن.
 
-### Dances
+### رقص‌ها
 
-`move(style, t, seed)` returns beat-locked pose offsets. The styles are bounce, hop, roof (arms up), sway, spin (a drawn spin through the key views once a bar), wave, walk, run, idle, stomp and shimmy. `mix` changes style every two bars. `dancer(x, y, u, style, t, extra)` is `clawd` + `move`. You can combine a dance with a face: `{ ...move('bounce', t), eyes: 'happy', mouth: 'grin' }`.
+`move(style, t, seed)` جابه‌جایی‌های ژستِ قفل‌شده به ضرب برمی‌گرداند. سبک‌ها: bounce، hop، roof (دست‌ها بالا)، sway، spin (چرخشِ کشیده‌شده از میان نماهای کلیدی، یک بار در هر میزان)، wave، walk، run، idle، stomp و shimmy. `mix` هر دو میزان سبک را عوض می‌کند. `dancer(x, y, u, style, t, extra)` همان `clawd` + `move` است. می‌توانی رقص را با صورت ترکیب کنی: `{ ...move('bounce', t), eyes: 'happy', mouth: 'grin' }`.
 
 ---
 
-## Music (optional)
+## سبک نقاشی
 
-The kit doesn't need music, but it's built for it:
+همه‌ی شکل‌ها و خط‌ها از `paint()` و `inkLine()` می‌گذرند، پس سبک یک جا عوض می‌شود: `style` در [src/config.js](src/config.js) (یا `studio.html?style=...` و `render.mjs --style=...` برای امتحان). سبک‌ها در [src/styles.js](src/styles.js) هستند: `watercolor` (پیش‌فرض)، `gouache`، `pencil`، `flat`، `cartoon`، `cutout`، `chalk`. سه‌تای اول با p5.brush نقاشی می‌کنند. چهارتای بعدی شکل‌های ساده‌ی p5 می‌کشند و بدون کارت گرافیک هم سریع‌اند. قانون‌های این راهنما درباره‌ی رسانه‌ی دست‌ساز، برای سبک‌های `flat` و `cartoon` به «شکل‌های تمیز و رنگ‌های یکدست» تبدیل می‌شوند. بقیه‌ی قانون‌ها (بازیگری، زمان‌بندی، گذار) همان می‌مانند.
 
-1. Set `bpm` to the song's tempo in [src/config.js](src/config.js), and set `offset` to the time of its first downbeat in seconds. Every idle, dance and `pulse()` then locks to the song.
-2. Put the audio in `assets/` and set `PROJECT.audio` (or pass `--audio=`). `--clip` and `--encode` mux it in.
-3. Land hits, cuts and takes on beats (`beatN`, `pulse`). Cut on bar lines for big changes, and give each musical phrase its own visual.
-4. **Lyrics are not text.** Don't put words on screen. Act the meaning of a line instead.
+## نسخه‌ی عمودی (ریلز)
 
-## Common failures
+`render.mjs --reel` (یا `studio.html?reel`) خروجی ۱۰۸۰×۱۹۲۰ می‌دهد. صحنه‌ها همچنان روی صفحه‌ی طراحی ۱۹۲۰×۱۰۸۰ کشیده می‌شوند. `REEL_VIEW(t)` یک پنجره‌ی ۹:۱۶ از آن را نشان می‌دهد (`{ cx, cy, h }`، h بزرگ‌تر یعنی دوربین عقب‌تر). نمونه در [src/scenes/story_reel.js](src/scenes/story_reel.js) است: برای هر شات چند کلید، و بینشان دوربین نرم حرکت می‌کند تا کاراکترها در قاب بمانند. پس‌زمینه‌های تمام‌صفحه را خیلی بزرگ‌تر از قاب بکش تا پنجره‌ی عقب‌رفته به لبه‌شان نرسد. `flash`، `iris`، `brushWipe` و `storyTitle` خودشان با پنجره هماهنگ می‌شوند. برای بررسی سریع قاب‌ها `--style=flat` بدون کارت گرافیک هم سریع است.
 
-These are the things that make a Clawd video look generated. Check your storyboard and sheets against them:
+## موسیقی (اختیاری)
 
-- signs, captions, labels or speech bubbles with words
-- Clawd standing still and smiling while nothing happens
-- everything moving at one brisk speed, with events stacked on top of each other and no holds
-- moments that are over before the viewer understands them
-- a tiny Clawd in a big empty landscape for the whole video
-- faces that snap from one expression to another
-- mechanical motion: linear moves, every part moving at once, both arms or several characters in sync
-- timid poses and takes that barely read
-- jittery linework: still things re-boiling every frame because something moving before them shifted the random stream (`boilSeed`)
-- hard cuts everywhere, or a video that just starts and stops
-- 3D rotation, perspective boxes or projected turns
-- plain p5 shapes, gradients or digital glows mixed into the paint (use `paint`/`inkLine`/`glow`)
-- muddy green-grey glows from painting yellow over blue
-- props floating near a hand instead of touching it
-- every shot a different world with nothing linking them
+کیت به موسیقی نیاز ندارد، ولی برایش ساخته شده:
 
-## About the demo
+1. `bpm` را در [src/config.js](src/config.js) برابر سرعت آهنگ بگذار، و `offset` را زمانِ اولین ضرب قوی به ثانیه. همه‌ی حرکت‌های بیکاری، رقص‌ها و `pulse()` به آهنگ قفل می‌شوند.
+2. فایل صوتی را در `assets/` بگذار و `PROJECT.audio` را تنظیم کن (یا `--audio=` بده). `--clip` و `--encode` آن را ترکیب می‌کنند.
+3. ضربه‌ها، برش‌ها و takeها را روی ضرب‌ها بگذار (`beatN`، `pulse`). برای تغییرهای بزرگ روی مرز میزان‌ها ببر، و به هر جمله‌ی موسیقی تصویر خودش را بده.
+4. **شعرِ آهنگ متن نیست.** کلمه‌ها را روی صفحه نیاور. معنای هر خط را بازی کن.
+5. **آهنگی که بعد از ساخت شات‌ها می‌رسد:** لازم نیست شات‌ها را از نو بنویسی. `resync()` در [src/timeline.js](src/timeline.js) شات‌های نوشته‌شده را روی ساعت آهنگ دوباره می‌چیند. هر ردیف می‌گوید شات از کدام ثانیه‌ی آهنگ شروع شود، کدام لحظه‌اش (`pins`) روی کدام خط آهنگ بیفتد، و در صورت نیاز فقط کدام تکه‌اش (`from`/`to`) پخش شود. نمونه‌ی کامل در [src/scenes/story_sync.js](src/scenes/story_sync.js) است. سرعت هر تکه را بین حدود ۰٫۷ تا ۱٫۴ برابر نگه دار، و تاب‌خوردن‌های دائمی (مثل آونگ) را با `t` بران، نه `lt`.
+6. **پیدا کردن زمان‌ها:** سرعت و اولین ضرب قوی را از خود فایل دربیاور (مثلاً با librosa)، بعد مرز بخش‌ها (سکوت‌ها، ورود ساز، تکرار ترجیع‌بند) و زمان هر خط شعر را پیدا کن. در `studio.html` دکمه‌ی ▶ (یا Space) ویدیو را با آهنگ پخش می‌کند تا هماهنگی را با گوش و چشم بسنجی.
 
-[src/scenes/demo.js](src/scenes/demo.js) ("The fallen star") exists to show the kit working: an acted emotion timeline, a drawn turn, a trot, a pickup, a throw on an arc, `glow`, a brush wipe and an iris in and out. **It's one idea, not a template.** Don't reuse its story, night sky, hills, star or shot structure. Start from the prompt and your own storyboard, and replace its script tag in `studio.html` with yours.
+## شکست‌های رایج
 
-### Worked example: how the demo times its ending
+این‌ها چیزهایی هستند که یک ویدیو را «ماشینی» نشان می‌دهند. استوری‌بورد و برگه‌هایت را با آن‌ها بسنج:
 
-This shows rule 4 applied to one shot of one video. The reads, the numbers and the way it ends are specific to this story; yours will be different. Read it for the reasoning, not the numbers. It's the demo's last shot, from the throw on, in video time:
+- تابلو، زیرنویس، برچسب یا حباب گفتگو با کلمه؛ یا متنی که داستان را تکرار می‌کند
+- کاراکتری که ایستاده و لبخند می‌زند در حالی که هیچ اتفاقی نمی‌افتد
+- همه‌چیز با یک سرعتِ تند، رویدادهای تلنبارشده روی هم و بدون مکث
+- لحظه‌هایی که قبل از اینکه بیننده بفهمد تمام می‌شوند
+- یک کاراکترِ ریز در منظره‌ای بزرگ و خالی برای کل ویدیو
+- صورت‌هایی که ناگهان از یک حالت به حالت دیگر می‌پرند
+- حرکت ماشینی: جابه‌جایی خطی، همه‌ی بخش‌ها با هم، هر دو دست یا چند کاراکتر هماهنگ
+- ژست‌ها و takeهای کم‌جرئت که به‌سختی خوانده می‌شوند
+- خط‌های لرزان: چیزهای ساکن که هر فریم دوباره می‌جوشند چون چیزی متحرک قبلشان جریان تصادف را جابه‌جا کرده (`boilSeed`)
+- برش‌های خشک همه‌جا، یا ویدیویی که ناگهان شروع و تمام می‌شود
+- چرخش سه‌بعدی، جعبه‌ی پرسپکتیو یا چرخش‌های تصویرشده
+- شکل‌های ساده‌ی p5، گرادیان‌ها یا هاله‌های دیجیتال قاطی نقاشی (از `paint`/`inkLine`/`glow` استفاده کن)
+- هاله‌های سبز-خاکستریِ گل‌آلود از نقاشیِ زرد روی آبی
+- وسیله‌هایی که نزدیک دست شناورند به جای اینکه لمسش کنند
+- هر شات یک دنیای متفاوت، بدون چیزی که به هم وصلشان کند
+- متن فارسی با حروفِ جدا از هم، یا چپ‌به‌راست (همیشه از `letter()` استفاده کن که خودش درستش می‌کند)
 
-| time | read | why it's timed this way |
+## درباره‌ی ویدیوی معرفی و دمو
+
+[src/scenes/farda_intro.js](src/scenes/farda_intro.js) («از امروز به فردا بیایید») ویدیوی معرفیِ آموزشگاه است و استوری‌بوردش در [STORYBOARD.md](STORYBOARD.md) آمده: شبِ «امروز» ← ۰۱ اندیشه تحلیلی (ستاره‌ها صورت‌فلکیِ یک موشک می‌شوند) ← ۰۲ یادگیری پروژه‌محور (فردی موشک را می‌سازد) ← ۰۳ آمادگی برای آینده (پرواز به طلوعِ «فردا»). نمونه‌ی خوبی است برای اینکه متن فارسی، گذارها و موتیف چطور کنار هم کار می‌کنند.
+
+[src/scenes/demo.js](src/scenes/demo.js) («ستاره‌ی افتاده») دموی کیت اصلی است و نشان می‌دهد کیت چه می‌کند: یک خط زمانیِ احساسِ بازی‌شده، یک چرخشِ کشیده‌شده، یورتمه، برداشتن، پرتاب روی قوس، `glow`، براش‌وایپ و آیریسِ ورود و خروج.
+
+**هیچ‌کدام قالب نیستند.** داستان، صحنه‌ها یا ساختار شات‌هایشان را دوباره استفاده نکن. از درخواست و استوری‌بورد خودت شروع کن و تگ اسکریپت صحنه را در `studio.html` با مال خودت جایگزین کن.
+
+### نمونه‌ی کامل: زمان‌بندی پایانِ دمو
+
+این قانون ۴ را روی یک شات از یک ویدیو نشان می‌دهد. خوانش‌ها، عددها و شیوه‌ی پایان مخصوص همین داستان‌اند؛ مال تو متفاوت خواهد بود. آن را برای استدلالش بخوان، نه عددهایش. این آخرین شاتِ دموست، از پرتاب به بعد، به زمانِ ویدیو:
+
+| زمان | خوانش | چرا این‌طور زمان‌بندی شده |
 |---|---|---|
-| 6.95–7.1 | wind-up and throw | fast motion; it reads because the wind-up anticipates it |
-| 7.1–7.9 | the star flies home | long enough for the eye to follow it from Clawd to the top of the frame; the camera eases back to give it sky |
-| 7.9–8.35 | it arrives: a flare, a sparkle, the sky twinkles | the payoff. Clawd only watches, so nothing competes with it |
-| 8.35–8.95 | Clawd falls in love | the reaction starts only after the viewer has seen the cause |
-| 8.95–9.4 | Clawd waves goodbye | a new action, on its own |
-| 9.4–9.8 | the star twinkles back | the answer to the wave |
-| 9.8–11.0 | iris to Clawd, hold, shut | the last read gets time to land before the video ends |
+| ۶٫۹۵–۷٫۱ | عقب بردن دست و پرتاب | حرکت سریع؛ خوانده می‌شود چون عقب بردنِ دست پیش‌بینی‌اش می‌کند |
+| ۷٫۱–۷٫۹ | ستاره به خانه پرواز می‌کند | آن‌قدر طولانی که چشم آن را از Clawd تا بالای قاب دنبال کند؛ دوربین آرام عقب می‌رود تا به آن آسمان بدهد |
+| ۷٫۹–۸٫۳۵ | می‌رسد: یک درخشش، یک برق، آسمان چشمک می‌زند | نتیجه. Clawd فقط تماشا می‌کند، پس هیچ‌چیز با آن رقابت نمی‌کند |
+| ۸٫۳۵–۸٫۹۵ | Clawd عاشق می‌شود | واکنش فقط بعد از اینکه بیننده علت را دیده شروع می‌شود |
+| ۸٫۹۵–۹٫۴ | Clawd خداحافظی می‌کند | یک کنش تازه، به‌تنهایی |
+| ۹٫۴–۹٫۸ | ستاره چشمک جواب می‌دهد | جوابِ دست تکان دادن |
+| ۹٫۸–۱۱٫۰ | آیریس روی Clawd، مکث، بسته شدن | خوانش آخر قبل از پایان ویدیو وقت دارد جا بیفتد |
 
-The first version packed all of this into about 1.3 s, and nobody could tell what had happened.
+نسخه‌ی اول همه‌ی این‌ها را در حدود ۱٫۳ ثانیه فشرده کرده بود و هیچ‌کس نمی‌فهمید چه اتفاقی افتاده.
